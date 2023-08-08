@@ -275,7 +275,7 @@ else
   echo "WARNING: MTS dataset is incomplete."
 fi
 
-comment
+
 
 # -------------------------------------------------------------------------
 # DWI
@@ -323,7 +323,7 @@ else
   echo "Skipping dwi"
 fi
 
-
+comment
 # -------------------------------------------------------------------------
 # FUNC
 # -------------------------------------------------------------------------
@@ -331,8 +331,7 @@ cd ../func
 file_task_rest_bold="${file}_task-rest_bold"
 file_task_rest_physio="${file}_task-rest_physio"
 # Check if all DWI files exists
-if [[ -e "${file_task_rest_bold}.nii.gz" && -e "${file_task_rest_physio}.tsv"]]; then
-
+if [[ -f ${file_task_rest_bold}.nii.gz ]];then
     # Convert GE physio data to FSL format # TODO change for linux
     cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
     matlab.exe -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
@@ -352,7 +351,6 @@ if [[ -e "${file_task_rest_bold}.nii.gz" && -e "${file_task_rest_physio}.tsv"]];
     # TODO: create mask
 
     # TODO motion correction
-
 else
   echo "Skipping func"
 fi
