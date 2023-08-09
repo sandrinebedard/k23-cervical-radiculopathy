@@ -74,7 +74,7 @@ segment_if_does_not_exist() {
     if [[ $segmentation_method == 'deepseg' ]];then
         sct_deepseg_sc -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
     elif [[ $segmentation_method == 'propseg' ]]; then
-        sct_propseg -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_propseg -i ${file}.nii.gz -c ${contrast} -qc ${PATH_QC} -qc-subject ${SUBJECT} -CSF
     fi
   fi
 }
@@ -109,6 +109,8 @@ SUBJECT=$1
 # get starting time:
 start=`date +%s`
 
+
+# TODO: add if spinal cord in ses
 
 # SCRIPT STARTS HERE
 # ==============================================================================
@@ -332,25 +334,73 @@ file_task_rest_bold="${file}_task-rest_bold"
 file_task_rest_physio="${file}_task-rest_physio"
 # Check if all DWI files exists
 if [[ -f ${file_task_rest_bold}.nii.gz ]];then
+
+    # Compute mean image
+    sct_maths -i ${file_task_rest_bold}.nii.gz -mean t -o ${file_task_rest_bold}_mean.nii.gz
+    file_task_rest_bold_mean="${file_task_rest_bold}_mean"
+    
+    # Segment the spinal cord
+    segment_if_does_not_exist ${file_task_rest_bold_mean} 't2s' 'propseg'
+    # Create a spinal canal mask
+    sct_maths -i ${file_task_rest_bold_mean}_seg.nii.gz -add ${file_task_rest_bold_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
+    # Dilate the spinal canal mask
+    sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+    # Qc of Spinal canal segmentation
+    sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
+   # Qc of mask
+    sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz
     # Convert GE physio data to FSL format # TODO change for linux
-    cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
-    matlab.exe -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
-    rm create_FSL_physio_text_file.m
+#    cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
+#    matlab.exe -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
+#    rm create_FSL_physio_text_file.m
 
     # Run FSL physio
-    pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+#    pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v#
+#	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+#	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
     
-    mkdir PNM
-	mv physio* ./PNM/
-	mv ${file_task_rest_physio}.txt ./PNM/
+#    mkdir PNM
+#	mv physio* ./PNM/
+#	mv ${file_task_rest_physio}.txt ./PNM/
 
-    fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
 
-    # TODO: create mask
+    # Motion correction
 
-    # TODO motion correction
+    #sct_fmri_moco -i ${file_task_rest_bold}.nii.gz -m ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-seg ${file_task_rest_bold_mean}_seg.nii.gz
+    
+
+    # --------------------
+    # 2D Motion correction
+    # --------------------
+    # Get the volume 125 for 1st round of motion correction
+    #fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
+    #file_mc1_ref="${file_task_rest_bold}_mc1_ref"
+    file_mc1_ref=${file_task_rest_bold_mean}
+    # Use mean mask instead
+    # test using spinal canal seg instead
+    #cp ${file_task_rest_bold_mean}_mask.nii.gz ${file_mc1_ref}_mask.nii.gz 
+    # Or put mean image as ref??
+    ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_mc1_ref}.nii.gz -m ${file_mc1_ref}_mask.nii.gz -o mc2d
+
+    mv mc2d.nii.gz ${file_task_rest_bold}_mc2d.nii.gz
+	mv mc2d_mean.nii.gz ${file_task_rest_bold}_mc2d_mean.nii.gz
+	mv mc2d_tsnr.nii.gz ${file_task_rest_bold}_mc2d_tsnr.nii.gz
+	mv mc2d_mat.tar.gz ${file_task_rest_bold}_mc2d_mat.tar.gz
+
+
+    # Create spinal cord mask and spinal canal mask
+    file_task_rest_bold_mc2d=${file_task_rest_bold}_mc2d
+    file_task_rest_bold_mc2d_mean=${file_task_rest_bold}_mc2d_mean
+
+    segment_if_does_not_exist ${file_task_rest_bold_mc2d_mean} 't2s' 'propseg'
+    sct_maths -i ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2d_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2d_mean}_SC_canal_seg.nii.gz
+
+    sct_qc -i ${file_task_rest_bold_mc2d}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
+
+
+    # TODO register to template
+
+
 else
   echo "Skipping func"
 fi
