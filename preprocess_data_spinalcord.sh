@@ -148,7 +148,7 @@ SES=$(basename "$SUBJECT")
 if [[ $SES == *"spinalcord"* ]];then
 
     # TODO: exclude ses-brain!!!
-<<comment
+#<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -330,7 +330,7 @@ if [[ $SES == *"spinalcord"* ]];then
         echo "Skipping dwi"
     fi
 
-comment
+#comment
     # -------------------------------------------------------------------------
     # FUNC
     # -------------------------------------------------------------------------
@@ -352,40 +352,30 @@ comment
         sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
         # Qc of Spinal canal segmentation
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
-    # Qc of mask
+        # Qc of mask
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz
+
+
         # Convert GE physio data to FSL format # TODO change for linux
-    #    cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
-    #    matlab.exe -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
-    #    rm create_FSL_physio_text_file.m
+        cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
+        matlab.exe -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
+        rm create_FSL_physio_text_file.m
 
         # Run FSL physio
-    #    pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v#
-    #	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-    #	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+        pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v#
+    	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+    	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
-    #    mkdir PNM
-    #	mv physio* ./PNM/
-    #	mv ${file_task_rest_physio}.txt ./PNM/
+        mkdir PNM
+    	mv physio* ./PNM/
+    	mv ${file_task_rest_physio}.txt ./PNM/
 
-
-        # Motion correction
-
-        sct_fmri_moco -i ${file_task_rest_bold}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-seg ${file_task_rest_bold_mean}_seg.nii.gz
-        
 
         # --------------------
         # 2D Motion correction
         # --------------------
-        # Get the volume 125 for 1st round of motion correction
-        #fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
-        #file_mc1_ref="${file_task_rest_bold}_mc1_ref"
-        file_mc1_ref=${file_task_rest_bold_mean}
-        # Use mean mask instead
-        # test using spinal canal seg instead
-        #cp ${file_task_rest_bold_mean}_mask.nii.gz ${file_mc1_ref}_mask.nii.gz 
-        # Or put mean image as ref??
-        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_mc1_ref}.nii.gz -m ${file_mc1_ref}_mask.nii.gz -o mc2d
+        # Slicewise 2D motion correction using Mean iage as ref
+        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc2d
 
         mv mc2d.nii.gz ${file_task_rest_bold}_mc2d.nii.gz
         mv mc2d_mean.nii.gz ${file_task_rest_bold}_mc2d_mean.nii.gz
@@ -402,11 +392,133 @@ comment
 
         sct_qc -i ${file_task_rest_bold_mc2d}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
 
-        # test segmentation using sct_deepseg_sc
+        # Create segmentation using sct_deepseg_sc
         segment_if_does_not_exist ${file_task_rest_bold_mc2d_mean} 't2s' 'deepseg'
+        file_task_rest_bold_mc2d_mean_seg="${file_task_rest_bold_mc2d_mean}_seg"
+        
+        # Register to template
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2d_mean}.nii.gz -dseg ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_task_rest_bold_mc2d_mean_seg}2PAM50_t2s.nii.gz
+        
+        sct_warp_template -d ${file_task_rest_bold_mc2d_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2d_mean}.nii.gz
 
-        # TODO register to template
+        # Create CSF regressor
+	    data=${file_task_rest_bold_mc2d}
+        fslmaths ./${data}_seg -binv temp_mask
+        fslmaths ./${data}_SC_canal_seg -mul temp_mask ${data}_csf_mask
+        rm temp_mask.nii.gz
+        fslsplit ${data}_csf_mask ${data}_csf_mask_slice -z
+        xdim=`fslval ${data} dim1`
+        ydim=`fslval ${data} dim2`
+        zdim=`fslval ${data} dim3`
+        tdim=`fslval ${data} dim4`
+        pixdimx=`fslval ${data} pixdim1`
+        pixdimy=`fslval ${data} pixdim2`
+        pixdimz=`fslval ${data} pixdim3`
+        tr=`fslval ${data} pixdim4`
+        fslsplit ${data} ${data}_slice -z
+        for ((k=0; k<$zdim; k++)) ; do
+            slice_number=$((10000+$k))
+            fslstats -t ${data}_slice${slice_number:1:4} -k ${data}_csf_mask_slice${slice_number:1:4} -m >> ${data}_slice${slice_number:1:4}_mean_csf.txt
+            fslascii2img ${data}_slice${slice_number:1:4}_mean_csf.txt 1 1 1 $tdim 1 1 1 $tr ${data}_slice${slice_number:1:4}_mean_csf
+            fslmaths ${data}_slice${slice_number:1:4}_mean_csf -Tmean mean
+            fslmaths ${data}_slice${slice_number:1:4}_mean_csf -sub mean ${data}_slice${slice_number:1:4}_mean_csf
+            rm mean.nii.gz
+            rm ${data}_slice${slice_number:1:4}_mean_csf.txt
+        done
+        v="${data}_slice0???_mean_csf.nii.gz"
+        fslmerge -z ${data}_csf_regressor $v
+        rm $v
+        v="${data}_slice0???.nii.gz"
+        rm $v
+        v="${data}_csf_mask_slice0???.nii.gz"
+        rm $v
 
+        mv ${data}_csf_regressor.nii.gz ./PNM
+
+        # Create WM regressor
+        data=${file_task_rest_bold_mc2d}
+        fslmaths ./label/template/PAM50_wm.nii.gz -thr 0.9 -bin ${data}_wm_mask
+        fslsplit ${data}_wm_mask ${data}_wm_mask_slice -z
+        xdim=`fslval ${data} dim1`
+        ydim=`fslval ${data} dim2`
+        zdim=`fslval ${data} dim3`
+        tdim=`fslval ${data} dim4`
+        pixdimx=`fslval ${data} pixdim1`
+        pixdimy=`fslval ${data} pixdim2`
+        pixdimz=`fslval ${data} pixdim3`
+        tr=`fslval ${data} pixdim4`
+        fslsplit ${data} ${data}_slice -z
+        for ((k=0; k<$zdim; k++)) ; do
+            slice_number=$((10000+$k))
+            fslstats -t ${data}_slice${slice_number:1:4} -k ${data}_wm_mask_slice${slice_number:1:4} -m >> ${data}_slice${slice_number:1:4}_mean_wm.txt
+            fslascii2img ${data}_slice${slice_number:1:4}_mean_wm.txt 1 1 1 $tdim 1 1 1 $tr ${data}_slice${slice_number:1:4}_mean_wm
+            fslmaths ${data}_slice${slice_number:1:4}_mean_wm -Tmean mean
+            fslmaths ${data}_slice${slice_number:1:4}_mean_wm -sub mean ${data}_slice${slice_number:1:4}_mean_wm
+            rm mean.nii.gz
+            rm ${data}_slice${slice_number:1:4}_mean_wm.txt
+        done
+        v="${data}_slice0???_mean_wm.nii.gz"
+        fslmerge -z ${data}_wm_regressor $v
+        rm $v
+        v="${data}_slice0???.nii.gz"
+        rm $v
+        v="${data}_wm_mask_slice0???.nii.gz"
+        rm $v
+
+        mv ${data}_wm_regressor.nii.gz ./PNM
+
+
+        #Correct PNM regressors for motion
+        cd ./PNM
+        cp  ../${file_task_rest_bold_mc2d}_mat.tar.gz mc2_mat.tar.gz
+        ${PATH_SCRIPTS}/motion_correction/pnm_ev_3D_correction_for_motion.sh -i ../${file_task_rest_bold_mc2d}.nii.gz -p physio_ev -n 32 -f mc2_mat.tar.gz -o 3D
+        rm mc2_mat.tar.gz
+        cd ..
+        
+        cp ${PATH_SCRIPTS}/utils/denoise.fsf ./
+        export analysis_path subject session
+        envsubst < "denoise.fsf" > "denoise_${file}.fsf"
+        feat denoise_${file}.fsf
+
+        # Create denoised image
+        fslmaths ./${file_task_rest_bold_mc2d}_pnm.feat/stats/res4d.nii.gz -add ./${file_task_rest_bold_mc2d}_pnm.feat/mean_func.nii.gz ${file_task_rest_bold_mc2d}_pnm
+        tr=`fslval ${file_task_rest_bold_mc2d} pixdim4` # Get TR of volumes
+        fslsplit ${file_task_rest_bold_mc2d}_pnm vol -t
+        v=vol????.nii.gz
+        fslmerge -tr ${file_task_rest_bold_mc2d}_pnm ${v} ${tr}
+        rm $v
+
+        # Find motion outliers
+        fsl_motion_outliers -i ${file_task_rest_bold_mc2d} -m ${file_task_rest_bold_mc2d_mean_seg} --dvars --nomoco -o ${file_task_rest_bold_mc2d}_dvars_motion_outliers.txt
+
+        # Run slicetiming correction
+        tr=`fslval ${file_task_rest_bold_mc2d}_pnm pixdim4` #Get TR of volumes
+        slicetimer -i ${file_task_rest_bold_mc2d}_pnm -o ${file_task_rest_bold_mc2d}_pnm_stc -r ${tr} --odd
+
+        # Warp each volume to the template
+        fslsplit ${file_task_rest_bold_mc2d}_pnm_stc vol -t
+        tr=`fslval ${file_task_rest_bold_mc2d}_pnm_stc pixdim4` # Get TR of volumes
+        tdimi=`fslval ${file_task_rest_bold_mc2d}_pnm_stc dim4` # Get the number of volumes
+        last_volume=$(echo "scale=0; $tdimi-1" | bc) # Find index of last volume
+        for ((k=0; k<=$last_volume; k++));do
+            vol="$(printf "vol%04d" ${k})"
+            sct_apply_transfo -i ${vol}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2d_mean}2PAM50_t2s.nii.gz -o ${vol}2template.nii.gz -x spline
+            fslmaths ${vol}2template.nii.gz -mul ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz ${vol}2template.nii.gz
+            fslroi ${vol}2template.nii.gz ${vol}2template.nii.gz 32 75 34 75 691 263
+        done
+        v="vol????2template.nii.gz"
+        fslmerge -tr ${file_task_rest_bold_mc2d}_pnm_stc2template $v $tr # Merge warped volumes together
+        rm $v
+        v=vol????.nii.gz
+        rm $v
+
+        #Remove outside voxels based on spinal cord mask z limits
+        sct_apply_transfo -i ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2d_mean}2PAM50_t2s.nii.gz -o ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz -x nn
+        fslroi ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz 32 75 34 75 691 263
+        fslmaths ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz -kernel 2D -dilD -dilD -dilD -dilD -dilD temp_mask
+        fslmaths ${file_task_rest_bold_mc2d}_pnm_stc2template -mul temp_mask ${file_task_rest_bold_mc2d}_pnm_stc2template
+        rm temp_mask.nii.gz
+        
 
     else
         echo "Skipping func"
