@@ -371,7 +371,7 @@ comment
 
         # Motion correction
 
-        #sct_fmri_moco -i ${file_task_rest_bold}.nii.gz -m ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-seg ${file_task_rest_bold_mean}_seg.nii.gz
+        sct_fmri_moco -i ${file_task_rest_bold}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-seg ${file_task_rest_bold_mean}_seg.nii.gz
         
 
         # --------------------
@@ -402,6 +402,8 @@ comment
 
         sct_qc -i ${file_task_rest_bold_mc2d}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
 
+        # test segmentation using sct_deepseg_sc
+        segment_if_does_not_exist ${file_task_rest_bold_mc2d_mean} 't2s' 'deepseg'
 
         # TODO register to template
 
