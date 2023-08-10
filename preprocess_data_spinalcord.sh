@@ -357,9 +357,9 @@ if [[ $SES == *"spinalcord"* ]];then
 
 
         # Convert GE physio data to FSL format # TODO change for linux
-        cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
-        sudo matlab -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
-        rm create_FSL_physio_text_file.m
+        #cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
+        #sudo matlab -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
+        #rm create_FSL_physio_text_file.m
 
         # Run FSL physio
         pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v#
