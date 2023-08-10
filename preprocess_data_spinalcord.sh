@@ -148,7 +148,7 @@ SES=$(basename "$SUBJECT")
 if [[ $SES == *"spinalcord"* ]];then
 
     # TODO: exclude ses-brain!!!
-#<<comment
+<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -177,6 +177,8 @@ if [[ $SES == *"spinalcord"* ]];then
         # Extract dics 3 and 7 for registration to template
         sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 3,7 -o ${file_t2_labels_discs}_3_7.nii.gz
         file_t2_labels_discs="${file_t2w}_seg_labeled_discs_3_7"
+
+# test using all the discs
 
         # Register T2w image to PAM50 template
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
@@ -275,7 +277,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_mton}.nii.gz -w warp_PAM50_t2s2${file_mton}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
         # TODO
-        # Do we want MTsat
+        # Do we want MTsat --> yes
         # Do we want to extract metrics at certain levels? regions of interest?
         cd ..
     else
@@ -330,7 +332,7 @@ if [[ $SES == *"spinalcord"* ]];then
         echo "Skipping dwi"
     fi
 
-#comment
+comment
     # -------------------------------------------------------------------------
     # FUNC
     # -------------------------------------------------------------------------
