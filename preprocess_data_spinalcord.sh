@@ -183,6 +183,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Register T2w image to PAM50 template
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
+
         # Register T2w image to PAM50 template using all discs
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc "${file_t2w}_seg_labeled_discs".nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT} -o ./reg2template_all_discs
 
@@ -328,7 +329,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_dwi_mean}.nii.gz -w warp_PAM50_t12${file_dwi_mean}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         # Register PAM50 T2w to dwi??
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -o ./reg2template_t2
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -ofolder ./reg2template_t2
 
 
         ## Create mask around the spinal cord (for faster computing)
