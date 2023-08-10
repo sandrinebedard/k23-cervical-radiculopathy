@@ -148,7 +148,7 @@ SES=$(basename "$SUBJECT")
 if [[ $SES == *"spinalcord"* ]];then
 
     # TODO: exclude ses-brain!!!
-<<comment
+#<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -183,6 +183,11 @@ if [[ $SES == *"spinalcord"* ]];then
         # Register T2w image to PAM50 template
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
+        # Register T2w image to PAM50 template using all discs
+        sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc "${file_t2w}_seg_labeled_discs".nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT} -o ./reg2template_all_discs
+
+
+
         # TODO:
         # - Add CSA computation where?
         cd ..
@@ -262,7 +267,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_mton_mask="${file_mton}_mask"
         # Co-register all 3 MTS contrasts
         sct_register_multimodal -i ${file_mtoff}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        sct_register_multimodal -i ${file_MTS_t1w}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        #sct_register_multimodal -i ${file_MTS_t1w}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         #Compute mtr. sct_compute_mtr was not working correctly so used fslmaths
         fslmaths ${file_mtoff}_reg -sub ${file_mton} -div ${file_mtoff}_reg -mul 100 mtr
@@ -271,7 +276,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # TODO: could also use t1w MTS and register to T1w template
         # Resgister PAM50 t2star template to MTon
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_wm.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=seg,algo=rigid:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        # Could use MTS_t1w also for registration
+
 
         # Warp template to MTon space
         sct_warp_template -d ${file_mton}.nii.gz -w warp_PAM50_t2s2${file_mton}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
@@ -322,6 +327,10 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         sct_warp_template -d ${file_dwi_mean}.nii.gz -w warp_PAM50_t12${file_dwi_mean}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
+        # Register PAM50 T2w to dwi??
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -o ./reg2template_t2
+
+
         ## Create mask around the spinal cord (for faster computing)
         sct_maths -i ${file_dwi_seg}.nii.gz -dilate 1 -shape ball -o ${file_dwi_seg}_dil.nii.gz
 
@@ -332,7 +341,7 @@ if [[ $SES == *"spinalcord"* ]];then
         echo "Skipping dwi"
     fi
 
-comment
+#comment
     # -------------------------------------------------------------------------
     # FUNC
     # -------------------------------------------------------------------------
