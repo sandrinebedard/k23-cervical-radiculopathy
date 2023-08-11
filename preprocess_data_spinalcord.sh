@@ -416,8 +416,8 @@ comment
 
         # Create CSF regressor
 	    data=${file_task_rest_bold_mc2d}
-        fslmaths ${data}_seg -binv temp_mask
-        fslmaths ${data}_SC_canal_seg -mul temp_mask ${data}_csf_mask
+        fslmaths ${data}_mean_seg -binv temp_mask
+        fslmaths ${data}_mean_SC_canal_seg -mul temp_mask ${data}_csf_mask
         rm temp_mask.nii.gz
         fslsplit ${data}_csf_mask ${data}_csf_mask_slice -z
         xdim=`fslval ${data} dim1`
