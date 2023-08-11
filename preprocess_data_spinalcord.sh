@@ -148,7 +148,7 @@ SES=$(basename "$SUBJECT")
 if [[ $SES == *"spinalcord"* ]];then
 
     # TODO: exclude ses-brain!!!
-#<<comment
+<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -301,7 +301,6 @@ if [[ $SES == *"spinalcord"* ]];then
     file_bval=${file_dwi}.bval
     file_bvec=${file_dwi}.bvec
 
-    file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # Check if all DWI files exists
     if [[ -e "${file_dwi}.nii.gz" && -e "${file_bval}" && -e "${file_bvec}" ]]; then
@@ -342,7 +341,9 @@ if [[ $SES == *"spinalcord"* ]];then
         echo "Skipping dwi"
     fi
 
-#comment
+comment
+    file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
+
     # -------------------------------------------------------------------------
     # FUNC
     # -------------------------------------------------------------------------
@@ -409,7 +410,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_task_rest_bold_mc2d_mean_seg="${file_task_rest_bold_mc2d_mean}_seg"
         
         # Register to template
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2d_mean}.nii.gz -dseg ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_task_rest_bold_mc2d_mean_seg}2PAM50_t2s.nii.gz
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2d_mean}.nii.gz -dseg ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2d_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2d_mean}.nii.gz
 
