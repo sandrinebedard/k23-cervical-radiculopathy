@@ -388,12 +388,12 @@ comment
         # 2D Motion correction
         # --------------------
         # Slicewise 2D motion correction using Mean iage as ref
-        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc2d
+      #  ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc2d
 
-        mv mc2d.nii.gz ${file_task_rest_bold}_mc2d.nii.gz
-        mv mc2d_mean.nii.gz ${file_task_rest_bold}_mc2d_mean.nii.gz
-        mv mc2d_tsnr.nii.gz ${file_task_rest_bold}_mc2d_tsnr.nii.gz
-        mv mc2d_mat.tar.gz ${file_task_rest_bold}_mc2d_mat.tar.gz
+       # mv mc2d.nii.gz ${file_task_rest_bold}_mc2d.nii.gz
+        #mv mc2d_mean.nii.gz ${file_task_rest_bold}_mc2d_mean.nii.gz
+        #mv mc2d_tsnr.nii.gz ${file_task_rest_bold}_mc2d_tsnr.nii.gz
+        #mv mc2d_mat.tar.gz ${file_task_rest_bold}_mc2d_mat.tar.gz
 
 
         # Create spinal cord mask and spinal canal mask
