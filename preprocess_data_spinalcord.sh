@@ -379,7 +379,7 @@ comment
     	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
     	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
-        mkdir PNM
+        mkdir -p PNM
     	mv physio* ./PNM/
     	mv ${file_task_rest_physio}.txt ./PNM/
 
