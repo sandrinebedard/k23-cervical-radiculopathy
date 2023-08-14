@@ -110,8 +110,6 @@ SUBJECT=$1
 start=`date +%s`
 
 
-# TODO: add if spinal cord in ses
-
 # SCRIPT STARTS HERE
 # ==============================================================================
 # Display useful info for the log, such as SCT version, RAM and CPU cores available
@@ -145,10 +143,10 @@ file="${SUBJECT//[\/]/_}"
 # Get session
 SES=$(basename "$SUBJECT")
 
+# Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
 
-    # TODO: exclude ses-brain!!!
-<<comment
+
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -162,10 +160,8 @@ if [[ $SES == *"spinalcord"* ]];then
         cp ${file_t2w}.nii.gz ${PATH_DATA_PROCESSED}/${SUBJECT}/anat/T2w
         cd T2w
         
-        # Do we reorient?
-
         # Spinal cord segmentation
-        # Note: For T2w images, we use sct_deepseg_sc with 2d kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel.
+        # Note: For T2w images, we use sct_deepseg_sc with 2 kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel.
         segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
         file_t2_seg="${file_t2w}_seg"
 
@@ -174,23 +170,15 @@ if [[ $SES == *"spinalcord"* ]];then
         file_t2_labels="${file_t2w}_seg_labeled"
         file_t2_labels_discs="${file_t2w}_seg_labeled_discs"
 
-        # Extract dics 3 and 7 for registration to template
-        sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 3,7 -o ${file_t2_labels_discs}_3_7.nii.gz
-        file_t2_labels_discs="${file_t2w}_seg_labeled_discs_3_7"
+        # Extract dics 3 to 8 for registration to template (C2-C3 to C7-T1)
+        sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 3,4,5,6,7,8 -o ${file_t2_labels_discs}_3to8.nii.gz
+        file_t2_labels_discs="${file_t2w}_seg_labeled_discs_3to8"
 
-# test using all the discs
-
-        # Register T2w image to PAM50 template
+        # Register T2w image to PAM50 template using all discs (C2-C3 to C7-T1)
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
-
-        # Register T2w image to PAM50 template using all discs
-        sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc "${file_t2w}_seg_labeled_discs".nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT} -o ./reg2template_all_discs
-
-
-
         # TODO:
-        # - Add CSA computation where?
+        # Add CSA computation where?
         cd ..
     else
         echo Skipping T2w
@@ -260,7 +248,7 @@ if [[ $SES == *"spinalcord"* ]];then
         cd MTS
 
         # Spinal cord segmentation of MT-on contrast
-        segment_if_does_not_exist ${file_mton} 't2' 'deepseg'  # TODO test with t2s too
+        segment_if_does_not_exist ${file_mton} 't2' 'deepseg'
         file_mton_seg="${file_mton}_seg"
 
         # Create a mask arround the spinal cord to help co-register all MTS contrasts
@@ -268,22 +256,35 @@ if [[ $SES == *"spinalcord"* ]];then
         file_mton_mask="${file_mton}_mask"
         # Co-register all 3 MTS contrasts
         sct_register_multimodal -i ${file_mtoff}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        #sct_register_multimodal -i ${file_MTS_t1w}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_register_multimodal -i ${file_MTS_t1w}.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=im,algo=slicereg,metric=CC -m ${file_mton_mask}.nii.gz -x spline -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
-        #Compute mtr. sct_compute_mtr was not working correctly so used fslmaths
+        # Compute mtr. sct_compute_mtr was not working correctly so used fslmaths
         fslmaths ${file_mtoff}_reg -sub ${file_mton} -div ${file_mtoff}_reg -mul 100 mtr
         # TODO test sct_compute_mtr
-        sct_compute_mtr -mt0 ${file_mtoff}.nii.gz -mt1 ${file_mton}.nii.gz
-        # TODO: could also use t1w MTS and register to T1w template
+       # sct_compute_mtr -mt0 ${file_mtoff}_reg.nii.gz -mt1 ${file_mton}.nii.gz
+
+        # Compute MTsat
+        sct_compute_mtsat -mt ${file_mton}.nii.gz -pd ${file_mtoff}_reg.nii.gz -t1 ${file_MTS_t1w}_reg.nii.gz
+        
         # Resgister PAM50 t2star template to MTon
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_wm.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=seg,algo=rigid:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
-
 
         # Warp template to MTon space
         sct_warp_template -d ${file_mton}.nii.gz -w warp_PAM50_t2s2${file_mton}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
+        # Warp to template for potential group analysis
+        # TODO check to add same croping as done for func
+        # Warp MTR to PAM50 template
+        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtr2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+        # Warp MTsat to PAM50 template
+        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+        # Warp MTsat to PAM50 template
+        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o t1map2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+
         # TODO
-        # Do we want MTsat --> yes
         # Do we want to extract metrics at certain levels? regions of interest?
         cd ..
     else
@@ -327,21 +328,23 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         sct_warp_template -d ${file_dwi_mean}.nii.gz -w warp_PAM50_t12${file_dwi_mean}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
-        # Register PAM50 T2w to dwi??
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_dwi_mean}.nii.gz -dseg ${file_dwi_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT} -ofolder ./reg2template_t2
-
-
-        ## Create mask around the spinal cord (for faster computing)
+        # Create mask around the spinal cord (for faster computing)
         sct_maths -i ${file_dwi_seg}.nii.gz -dilate 1 -shape ball -o ${file_dwi_seg}_dil.nii.gz
 
         # Compute DTI
         sct_dmri_compute_dti -i ${file_dwi}.nii.gz -bvec ${file_bvec} -bval ${file_bval} -method standard -m ${file_dwi_seg}_dil.nii.gz -evecs 1
         
+        # Warp all DTI results to PAM50 space
+        # TODO check to add same croping as done for func
+        sct_apply_transfo -i dti_FA.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_FA2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i dti_MD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_MD2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i dti_RD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_RD2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+
+
     else
         echo "Skipping dwi"
     fi
 
-comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -362,20 +365,20 @@ comment
         # Create a spinal canal mask
         sct_maths -i ${file_task_rest_bold_mean}_seg.nii.gz -add ${file_task_rest_bold_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
         # Dilate the spinal canal mask
+        # check dilating
         sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
         # Qc of Spinal canal segmentation
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
         # Qc of mask
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz
 
-
-        # Convert GE physio data to FSL format # TODO change for linux
-        #cp ${PATH_SCRIPTS}/utils/create_FSL_physio_text_file.m ./
-        #sudo matlab -nodisplay -nosplash -nodesktop -r "create_FSL_physio_text_file(${file_task_rest_physio},3.0,245)"
-        #rm create_FSL_physio_text_file.m
+        # Convert GE physio data to FSL format
+        python3 $PATH_SCRIPTS/utils/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
         # Run FSL physio
+        # TODO talk to merve for this
         #pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+        # check with merve
     	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
     	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
@@ -387,35 +390,55 @@ comment
         # --------------------
         # 2D Motion correction
         # --------------------
-        # Slicewise 2D motion correction using Mean iage as ref
-      #  ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc2d
 
-       # mv mc2d.nii.gz ${file_task_rest_bold}_mc2d.nii.gz
-        #mv mc2d_mean.nii.gz ${file_task_rest_bold}_mc2d_mean.nii.gz
-        #mv mc2d_tsnr.nii.gz ${file_task_rest_bold}_mc2d_tsnr.nii.gz
-        #mv mc2d_mat.tar.gz ${file_task_rest_bold}_mc2d_mat.tar.gz
+        # Step 1 of 2D motion correction using mid volume
+        # Select mid volume
+        fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
+        # Apply motion correction
+        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}_mc1_ref.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc1
+        
 
+        # Step 2 of 2D motion correction using mean of mc1 as ref
+        # Segment the spinal cord
+        segment_if_does_not_exist mc1_mean.nii.gz 't2s' 'propseg'
+        # Create a spinal canal mask
+        sct_maths -i mc1_mean_seg.nii.gz -add mc1_mean_CSF_seg.nii.gz -o mc1_mean_SC_canal_seg.nii.gz
+        # Dilate the spinal canal mask
+        # check dilating
+        sct_maths -i mc1_mean_SC_canal_seg.nii.gz -dilate 5 -shape disk -o mc1_mask.nii.gz -dim 2
+        # Qc of Spinal canal segmentation
+        sct_qc -i $ mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz
+        # Qc of mask
+        sct_qc -i  mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mask.nii.gz
+
+        # Apply motion correction step 2
+        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i mc1.nii.gz -r mc1_mean.nii.gz -m mc1_mask.nii.gz -o mc2
+
+        mv mc2.nii.gz ${file_task_rest_bold}_mc2.nii.gz
+        mv mc2_mean.nii.gz ${file_task_rest_bold}_mc2_mean.nii.gz
+        mv mc2_tsnr.nii.gz ${file_task_rest_bold}_mc2_tsnr.nii.gz
+        mv mc2_mat.tar.gz ${file_task_rest_bold}_mc2_mat.tar.gz
 
         # Create spinal cord mask and spinal canal mask
-        file_task_rest_bold_mc2d=${file_task_rest_bold}_mc2d
-        file_task_rest_bold_mc2d_mean=${file_task_rest_bold}_mc2d_mean
+        file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
+        file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
 
-        segment_if_does_not_exist ${file_task_rest_bold_mc2d_mean} 't2s' 'propseg'
-        sct_maths -i ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2d_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2d_mean}_SC_canal_seg.nii.gz
+        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg'
+        sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
 
-        sct_qc -i ${file_task_rest_bold_mc2d}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2d_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
+        sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
 
         # Create segmentation using sct_deepseg_sc
-        segment_if_does_not_exist ${file_task_rest_bold_mc2d_mean} 't2s' 'deepseg'
-        file_task_rest_bold_mc2d_mean_seg="${file_task_rest_bold_mc2d_mean}_seg"
+        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'deepseg'
+        file_task_rest_bold_mc2_mean_seg="${file_task_rest_bold_mc2_mean}_seg"
         
         # Register to template
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2d_mean}.nii.gz -dseg ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
-        sct_warp_template -d ${file_task_rest_bold_mc2d_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2d_mean}.nii.gz
-
+        sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
+<<comment
         # Create CSF regressor
-	    data=${file_task_rest_bold_mc2d}
+	    data=${file_task_rest_bold_mc2}
         fslmaths ${data}_mean_seg -binv temp_mask
         fslmaths ${data}_mean_SC_canal_seg -mul temp_mask ${data}_csf_mask
         rm temp_mask.nii.gz
@@ -449,7 +472,7 @@ comment
         mv ${data}_csf_regressor.nii.gz ./PNM
 
         # Create WM regressor
-        data=${file_task_rest_bold_mc2d}
+        data=${file_task_rest_bold_mc2}
         fslmaths ./label/template/PAM50_wm.nii.gz -thr 0.9 -bin ${data}_wm_mask
         fslsplit ${data}_wm_mask ${data}_wm_mask_slice -z
         xdim=`fslval ${data} dim1`
@@ -482,57 +505,64 @@ comment
 
 
         #Correct PNM regressors for motion
-        cd ./PNM
-        cp  ../${file_task_rest_bold_mc2d}_mat.tar.gz mc2_mat.tar.gz
-        ${PATH_SCRIPTS}/motion_correction/pnm_ev_3D_correction_for_motion.sh -i ../${file_task_rest_bold_mc2d}.nii.gz -p physio_ev -n 32 -f mc2_mat.tar.gz -o 3D
-        rm mc2_mat.tar.gz
-        cd ..
+#        cd ./PNM
+#        cp  ../${file_task_rest_bold_mc2}_mat.tar.gz mc2_mat.tar.gz
+#        # 
+#        ${PATH_SCRIPTS}/motion_correction/pnm_ev_3D_correction_for_motion.sh -i ../${file_task_rest_bold_mc2}.nii.gz -p physio_ev -n 32 -f mc2_mat.tar.gz -o 3D
+#        rm mc2_mat.tar.gz
+       # cd ..
         
+        # TODO: check to create slicewise motion regressors ()
+
         cp ${PATH_SCRIPTS}/utils/denoise.fsf ./
         export analysis_path subject session
         envsubst < "denoise.fsf" > "denoise_${file}.fsf"
         feat denoise_${file}.fsf
 
         # Create denoised image
-        fslmaths ./${file_task_rest_bold_mc2d}_pnm.feat/stats/res4d.nii.gz -add ./${file_task_rest_bold_mc2d}_pnm.feat/mean_func.nii.gz ${file_task_rest_bold_mc2d}_pnm
-        tr=`fslval ${file_task_rest_bold_mc2d} pixdim4` # Get TR of volumes
-        fslsplit ${file_task_rest_bold_mc2d}_pnm vol -t
+        fslmaths ./${file_task_rest_bold_mc2}_pnm.feat/stats/res4d.nii.gz -add ./${file_task_rest_bold_mc2}_pnm.feat/mean_func.nii.gz ${file_task_rest_bold_mc2}_pnm
+        tr=`fslval ${file_task_rest_bold_mc2} pixdim4` # Get TR of volumes
+        fslsplit ${file_task_rest_bold_mc2}_pnm vol -t
         v=vol????.nii.gz
-        fslmerge -tr ${file_task_rest_bold_mc2d}_pnm ${v} ${tr}
+        fslmerge -tr ${file_task_rest_bold_mc2}_pnm ${v} ${tr}
         rm $v
 
         # Find motion outliers
-        fsl_motion_outliers -i ${file_task_rest_bold_mc2d} -m ${file_task_rest_bold_mc2d_mean_seg} --dvars --nomoco -o ${file_task_rest_bold_mc2d}_dvars_motion_outliers.txt
+        fsl_motion_outliers -i ${file_task_rest_bold_mc2} -m ${file_task_rest_bold_mc2_mean_seg} --dvars --nomoco -o ${file_task_rest_bold_mc2}_dvars_motion_outliers.txt
 
         # Run slicetiming correction
-        tr=`fslval ${file_task_rest_bold_mc2d}_pnm pixdim4` #Get TR of volumes
-        slicetimer -i ${file_task_rest_bold_mc2d}_pnm -o ${file_task_rest_bold_mc2d}_pnm_stc -r ${tr} --odd
+        tr=`fslval ${file_task_rest_bold_mc2}_pnm pixdim4` #Get TR of volumes
+        slicetimer -i ${file_task_rest_bold_mc2}_pnm -o ${file_task_rest_bold_mc2}_pnm_stc -r ${tr} --odd
 
         # Warp each volume to the template
-        fslsplit ${file_task_rest_bold_mc2d}_pnm_stc vol -t
-        tr=`fslval ${file_task_rest_bold_mc2d}_pnm_stc pixdim4` # Get TR of volumes
-        tdimi=`fslval ${file_task_rest_bold_mc2d}_pnm_stc dim4` # Get the number of volumes
+        fslsplit ${file_task_rest_bold_mc2}_pnm_stc vol -t
+        tr=`fslval ${file_task_rest_bold_mc2}_pnm_stc pixdim4` # Get TR of volumes
+        tdimi=`fslval ${file_task_rest_bold_mc2}_pnm_stc dim4` # Get the number of volumes
         last_volume=$(echo "scale=0; $tdimi-1" | bc) # Find index of last volume
         for ((k=0; k<=$last_volume; k++));do
             vol="$(printf "vol%04d" ${k})"
-            sct_apply_transfo -i ${vol}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2d_mean}2PAM50_t2s.nii.gz -o ${vol}2template.nii.gz -x spline
+            sct_apply_transfo -i ${vol}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2s.nii.gz -o ${vol}2template.nii.gz -x spline
             fslmaths ${vol}2template.nii.gz -mul ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz ${vol}2template.nii.gz
             fslroi ${vol}2template.nii.gz ${vol}2template.nii.gz 32 75 34 75 691 263
         done
         v="vol????2template.nii.gz"
-        fslmerge -tr ${file_task_rest_bold_mc2d}_pnm_stc2template $v $tr # Merge warped volumes together
+        fslmerge -tr ${file_task_rest_bold_mc2}_pnm_stc2template $v $tr # Merge warped volumes together
         rm $v
         v=vol????.nii.gz
         rm $v
 
         #Remove outside voxels based on spinal cord mask z limits
-        sct_apply_transfo -i ${file_task_rest_bold_mc2d_mean_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2d_mean}2PAM50_t2s.nii.gz -o ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz -x nn
-        fslroi ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz 32 75 34 75 691 263
-        fslmaths ${file_task_rest_bold_mc2d_mean_seg}2template.nii.gz -kernel 2D -dilD -dilD -dilD -dilD -dilD temp_mask
-        fslmaths ${file_task_rest_bold_mc2d}_pnm_stc2template -mul temp_mask ${file_task_rest_bold_mc2d}_pnm_stc2template
+        sct_apply_transfo -i ${file_task_rest_bold_mc2_mean_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2s.nii.gz -o ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz -x nn
+        fslroi ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz 32 75 34 75 691 263
+        fslmaths ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz -kernel 2 -dilD -dilD -dilD -dilD -dilD temp_mask
+        fslmaths ${file_task_rest_bold_mc2}_pnm_stc2template -mul temp_mask ${file_task_rest_bold_mc2}_pnm_stc2template
         rm temp_mask.nii.gz
         
-
+        # TODO: here or later
+        # Bandpass temporal filtering (see fslmath)
+        # nilearn check bandpass filter could be done here
+        # spatial smoothing --> if in template space
+comment
     else
         echo "Skipping func"
     fi
