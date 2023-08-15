@@ -403,7 +403,7 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # Step 2 of 2D motion correction using mean of mc1 as ref
         # Segment the spinal cord
-        segment_if_does_not_exist mc1_mean.nii.gz 't2s' 'propseg'
+        segment_if_does_not_exist mc1_mean 't2s' 'propseg'
         # Create a spinal canal mask
         sct_maths -i mc1_mean_seg.nii.gz -add mc1_mean_CSF_seg.nii.gz -o mc1_mean_SC_canal_seg.nii.gz
         # Dilate the spinal canal mask
