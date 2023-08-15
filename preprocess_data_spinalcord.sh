@@ -146,7 +146,7 @@ SES=$(basename "$SUBJECT")
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
 
-
+<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -347,7 +347,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-
+comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -410,7 +410,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # check dilating
         sct_maths -i mc1_mean_SC_canal_seg.nii.gz -dilate 5 -shape disk -o mc1_mask.nii.gz -dim 2
         # Qc of Spinal canal segmentation
-        sct_qc -i $ mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz
+        sct_qc -i mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz
         # Qc of mask
         sct_qc -i  mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mask.nii.gz
 
