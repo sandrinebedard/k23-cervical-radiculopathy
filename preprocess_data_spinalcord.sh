@@ -264,6 +264,9 @@ if [[ $SES == *"spinalcord"* ]];then
        # sct_compute_mtr -mt0 ${file_mtoff}_reg.nii.gz -mt1 ${file_mton}.nii.gz
 
         # Compute MTsat
+        # Copy json files with _reg suffix
+        cp ${file_mtoff}.json ${file_mtoff}_reg.json
+        cp ${file_MTS_t1w}.json ${file_MTS_t1w}_reg.json
         sct_compute_mtsat -mt ${file_mton}.nii.gz -pd ${file_mtoff}_reg.nii.gz -t1 ${file_MTS_t1w}_reg.nii.gz
         
         # Resgister PAM50 t2star template to MTon
