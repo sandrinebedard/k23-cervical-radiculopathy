@@ -278,13 +278,13 @@ if [[ $SES == *"spinalcord"* ]];then
         # Warp to template for potential group analysis
         # TODO check to add same croping as done for func
         # Warp MTR to PAM50 template
-        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtr2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtr2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o t1map2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o t1map2template.nii.gz -x linear
 
 
         # TODO
@@ -339,9 +339,9 @@ if [[ $SES == *"spinalcord"* ]];then
         
         # Warp all DTI results to PAM50 space
         # TODO check to add same croping as done for func
-        sct_apply_transfo -i dti_FA.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_FA2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        sct_apply_transfo -i dti_MD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_MD2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
-        sct_apply_transfo -i dti_RD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_RD2template.nii.gz -x linear -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_apply_transfo -i dti_FA.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_FA2template.nii.gz -x linear
+        sct_apply_transfo -i dti_MD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_MD2template.nii.gz -x linear
+        sct_apply_transfo -i dti_RD.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t1.nii.gz -w warp_${file_dwi_mean}2PAM50_t1.nii.gz -o dti_RD2template.nii.gz -x linear
 
 
     else
