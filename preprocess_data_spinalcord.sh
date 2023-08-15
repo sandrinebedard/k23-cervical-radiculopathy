@@ -398,7 +398,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Select mid volume
         fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
         # Apply motion correction
-        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold_mean}_mc1_ref.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc1
+        ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i ${file_task_rest_bold}.nii.gz -r ${file_task_rest_bold}_mc1_ref.nii.gz -m ${file_task_rest_bold_mean}_mask.nii.gz -o mc1
         
 
         # Step 2 of 2D motion correction using mean of mc1 as ref
