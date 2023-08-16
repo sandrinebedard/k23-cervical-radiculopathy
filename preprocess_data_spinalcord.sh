@@ -167,7 +167,7 @@ SES=$(basename "$SUBJECT")
 
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
-#<<comment
+<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -369,7 +369,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-#comment
+comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -407,7 +407,7 @@ if [[ $SES == *"spinalcord"* ]];then
     #	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
         
         popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --cardiac=3 --trigger=2 -v
-    	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+    	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -o physio_ --tr=3.0 --oc=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
         mkdir -p PNM
     	mv physio* ./PNM/
