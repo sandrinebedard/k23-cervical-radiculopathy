@@ -167,7 +167,7 @@ SES=$(basename "$SUBJECT")
 
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
-
+#<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -300,13 +300,13 @@ if [[ $SES == *"spinalcord"* ]];then
         # Warp to template for potential group analysis
         # TODO check to add same croping as done for func
         # Warp MTR to PAM50 template
-        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtr2template.nii.gz -x linear
+        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o mtr2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear
+        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2AM50_t2s.nii.gz -o t1map2template.nii.gz -x linear
+        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o t1map2template.nii.gz -x linear
 
 
         # TODO
@@ -369,7 +369,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-
+#comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -404,8 +404,10 @@ if [[ $SES == *"spinalcord"* ]];then
         # TODO talk to merve for this
         #pnm_stage1 -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
         # check with merve
-    	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-    	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+    #	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+        
+        popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --cardiac=3 --trigger=2 -v
+    	pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
         mkdir -p PNM
     	mv physio* ./PNM/
