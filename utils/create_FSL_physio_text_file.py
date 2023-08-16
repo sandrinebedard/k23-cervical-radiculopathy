@@ -115,10 +115,11 @@ def main():
     plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)
 
     # Save into txt file
-    columns_df = ['Time', 'Respiratory Data', 'Scanner Triggers', 'Cardiac Data']
+    #columns_df = ['Time', 'Respiratory Data', 'Scanner Triggers', 'Cardiac Data']
+    columns_df = ['Time', 'Scanner Triggers', 'Cardiac Data']
     df_final = pd.DataFrame(columns=columns_df)
     df_final['Time'] = cardiac_time_data
-    df_final['Respiratory Data'] = respiration_data_interp
+   # df_final['Respiratory Data'] = respiration_data_interp
     df_final['Scanner Triggers'] = trigger_data
     df_final['Cardiac Data'] = cardiac_data
 
