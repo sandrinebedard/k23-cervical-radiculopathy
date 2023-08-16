@@ -58,8 +58,8 @@ segment_if_does_not_exist() {
   local contrast="$2"
   local segmentation_method="$3"  # deepseg or propseg
   # Update global variable with segmentation file name
-  FILESEG="${file}_label-SC_mask"
-  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/anat/${FILESEG}-manual.nii.gz"
+  FILESEG="${file}_seg"
+  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/anat/${FILESEG}.nii.gz"
   echo
   echo "Looking for manual segmentation: $FILESEGMANUAL"
   if [[ -e $FILESEGMANUAL ]]; then
@@ -67,7 +67,7 @@ segment_if_does_not_exist() {
     rsync -avzh $FILESEGMANUAL ${FILESEG}.nii.gz
     sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -qc-subject ${SUBJECT}
     # Rename manual seg to seg name
-    mv ${FILESEG}.nii.gz ${file}_seg.nii.gz
+    #mv ${FILESEG}.nii.gz ${file}_seg.nii.gz
   else
     echo "Not found. Proceeding with automatic segmentation."
     # Segment spinal cord
@@ -79,6 +79,28 @@ segment_if_does_not_exist() {
   fi
 }
 
+
+# Check if manual segmentation already exists. If it does, copy it locally. If
+# it does not, perform seg.
+segment_gm_if_does_not_exist(){
+  local file="$1"
+  #local contrast="$2"
+  # Update global variable with segmentation file name
+  FILESEG="${file}_gmseg"
+  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/anat/${FILESEG}.nii.gz"
+  echo "Looking for manual segmentation: $FILESEGMANUAL"
+  if [[ -e $FILESEGMANUAL ]]; then
+    echo "Found! Using manual segmentation."
+    rsync -avzh $FILESEGMANUAL ${FILESEG}.nii.gz
+    sct_qc -i ${file}.nii.gz -s ${FILESEG}.nii.gz -p sct_deepseg_gm -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  else
+    echo "Not found. Proceeding with automatic segmentation."
+    # Segment spinal cord
+    sct_deepseg_gm -i ${file}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+  fi
+}
+
+
 label_if_does_not_exist(){
   ###
   #  This function checks if a manual labels exists, then:
@@ -88,7 +110,7 @@ label_if_does_not_exist(){
   local file="$1"
   local file_seg="$2"
   # Update global variable with segmentation file name
-  FILELABEL="${file}_labels"
+  FILELABEL="${file}_labels-disc"
   FILELABELMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/anat/${FILELABEL}-manual.nii.gz"
   echo "Looking for manual label: $FILELABELMANUAL"
   if [[ -e $FILELABELMANUAL ]]; then
@@ -202,7 +224,8 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # TODO add function for GM seg to use manual seg
         # Spinal cord GM segmentation
-        sct_deepseg_gm -i ${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        segment_gm_if_does_not_exist ${file_t2star}
+        #sct_deepseg_gm -i ${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         file_t2star_gmseg="${file_t2star}_gmseg"
         
         # Get WM segmentation by subtracting SC cord segmentation with GM segmentation
