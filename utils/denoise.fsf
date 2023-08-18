@@ -30,7 +30,7 @@ set fmri(featwatcher_yn) 1
 set fmri(sscleanup_yn) 0
 
 # Output directory
-set fmri(outputdir) "${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/${subject}_ses-${session}spinalcord_task-rest_bold_mc3_pnm.feat"
+set fmri(outputdir) "${PATH_DATA_PROCESSED}/${SUBJECT}/func/${file_task_rest_bold}_mc2_pnm.feat"
 
 # TR(s)
 set fmri(tr) 3.000000
@@ -273,13 +273,13 @@ set fmri(totalVoxels) 31610880
 set fmri(ncopeinputs) 0
 
 # 4D AVW data or FEAT directory (1)
-set feat_files(1) "${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/${subject}_ses-${session}spinalcord_task-rest_bold_mc3"
+set feat_files(1) "${PATH_DATA_PROCESSED}/${SUBJECT}/func/${file_task_rest_bold}_mc2"
 
 # Add confound EVs text file
 set fmri(confoundevs) 1
 
 # Confound EVs text file for analysis 1
-set confoundev_files(1) "${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/${subject}_ses-${session}spinalcord_task-rest_bold_mc2.txt"
+set confoundev_files(1) "${PATH_DATA_PROCESSED}/${SUBJECT}/func/${file_task_rest_bold}_mc2.txt"
 
 # EV 1 title
 set fmri(evtitle1) "physioev001"
@@ -314,7 +314,7 @@ set fmri(tempfilt_yn1) 0
 set fmri(deriv_yn1) 0
 
 # EV 1 voxelwise image filename
-set fmri(evs_vox_1) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev001.nii.gz
+set fmri(evs_vox_1) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev001.nii.gz
 
 # Orthogonalise EV 1 wrt EV 0
 set fmri(ortho1.0) 0
@@ -454,7 +454,7 @@ set fmri(tempfilt_yn2) 0
 set fmri(deriv_yn2) 0
 
 # EV 2 voxelwise image filename
-set fmri(evs_vox_2) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev002.nii.gz
+set fmri(evs_vox_2) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev002.nii.gz
 
 # Orthogonalise EV 2 wrt EV 0
 set fmri(ortho2.0) 0
@@ -594,7 +594,7 @@ set fmri(tempfilt_yn3) 0
 set fmri(deriv_yn3) 0
 
 # EV 3 voxelwise image filename
-set fmri(evs_vox_3) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev003.nii.gz
+set fmri(evs_vox_3) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev003.nii.gz
 
 # Orthogonalise EV 3 wrt EV 0
 set fmri(ortho3.0) 0
@@ -734,7 +734,7 @@ set fmri(tempfilt_yn4) 0
 set fmri(deriv_yn4) 0
 
 # EV 4 voxelwise image filename
-set fmri(evs_vox_4) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev004.nii.gz
+set fmri(evs_vox_4) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev004.nii.gz
 
 # Orthogonalise EV 4 wrt EV 0
 set fmri(ortho4.0) 0
@@ -874,7 +874,7 @@ set fmri(tempfilt_yn5) 0
 set fmri(deriv_yn5) 0
 
 # EV 5 voxelwise image filename
-set fmri(evs_vox_5) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev005.nii.gz
+set fmri(evs_vox_5) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev005.nii.gz
 
 # Orthogonalise EV 5 wrt EV 0
 set fmri(ortho5.0) 0
@@ -1014,7 +1014,7 @@ set fmri(tempfilt_yn6) 0
 set fmri(deriv_yn6) 0
 
 # EV 6 voxelwise image filename
-set fmri(evs_vox_6) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev006.nii.gz
+set fmri(evs_vox_6) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev006.nii.gz
 
 # Orthogonalise EV 6 wrt EV 0
 set fmri(ortho6.0) 0
@@ -1154,7 +1154,7 @@ set fmri(tempfilt_yn7) 0
 set fmri(deriv_yn7) 0
 
 # EV 7 voxelwise image filename
-set fmri(evs_vox_7) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev007.nii.gz
+set fmri(evs_vox_7) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev007.nii.gz
 
 # Orthogonalise EV 7 wrt EV 0
 set fmri(ortho7.0) 0
@@ -1294,7 +1294,7 @@ set fmri(tempfilt_yn8) 0
 set fmri(deriv_yn8) 0
 
 # EV 8 voxelwise image filename
-set fmri(evs_vox_8) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev008.nii.gz
+set fmri(evs_vox_8) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev008.nii.gz
 
 # Orthogonalise EV 8 wrt EV 0
 set fmri(ortho8.0) 0
@@ -1434,7 +1434,7 @@ set fmri(tempfilt_yn9) 0
 set fmri(deriv_yn9) 0
 
 # EV 9 voxelwise image filename
-set fmri(evs_vox_9) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev009.nii.gz
+set fmri(evs_vox_9) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev009.nii.gz
 
 # Orthogonalise EV 9 wrt EV 0
 set fmri(ortho9.0) 0
@@ -1574,7 +1574,7 @@ set fmri(tempfilt_yn10) 0
 set fmri(deriv_yn10) 0
 
 # EV 10 voxelwise image filename
-set fmri(evs_vox_10) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev010.nii.gz
+set fmri(evs_vox_10) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev010.nii.gz
 
 # Orthogonalise EV 10 wrt EV 0
 set fmri(ortho10.0) 0
@@ -1714,7 +1714,7 @@ set fmri(tempfilt_yn11) 0
 set fmri(deriv_yn11) 0
 
 # EV 11 voxelwise image filename
-set fmri(evs_vox_11) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev011.nii.gz
+set fmri(evs_vox_11) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev011.nii.gz
 
 # Orthogonalise EV 11 wrt EV 0
 set fmri(ortho11.0) 0
@@ -1854,7 +1854,7 @@ set fmri(tempfilt_yn12) 0
 set fmri(deriv_yn12) 0
 
 # EV 12 voxelwise image filename
-set fmri(evs_vox_12) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev012.nii.gz
+set fmri(evs_vox_12) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev012.nii.gz
 
 # Orthogonalise EV 12 wrt EV 0
 set fmri(ortho12.0) 0
@@ -1994,7 +1994,7 @@ set fmri(tempfilt_yn13) 0
 set fmri(deriv_yn13) 0
 
 # EV 13 voxelwise image filename
-set fmri(evs_vox_13) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev013.nii.gz
+set fmri(evs_vox_13) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev013.nii.gz
 
 # Orthogonalise EV 13 wrt EV 0
 set fmri(ortho13.0) 0
@@ -2134,7 +2134,7 @@ set fmri(tempfilt_yn14) 0
 set fmri(deriv_yn14) 0
 
 # EV 14 voxelwise image filename
-set fmri(evs_vox_14) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev014.nii.gz
+set fmri(evs_vox_14) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev014.nii.gz
 
 # Orthogonalise EV 14 wrt EV 0
 set fmri(ortho14.0) 0
@@ -2274,7 +2274,7 @@ set fmri(tempfilt_yn15) 0
 set fmri(deriv_yn15) 0
 
 # EV 15 voxelwise image filename
-set fmri(evs_vox_15) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev015.nii.gz
+set fmri(evs_vox_15) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev015.nii.gz
 
 # Orthogonalise EV 15 wrt EV 0
 set fmri(ortho15.0) 0
@@ -2414,7 +2414,7 @@ set fmri(tempfilt_yn16) 0
 set fmri(deriv_yn16) 0
 
 # EV 16 voxelwise image filename
-set fmri(evs_vox_16) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev016.nii.gz
+set fmri(evs_vox_16) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev016.nii.gz
 
 # Orthogonalise EV 16 wrt EV 0
 set fmri(ortho16.0) 0
@@ -2554,7 +2554,7 @@ set fmri(tempfilt_yn17) 0
 set fmri(deriv_yn17) 0
 
 # EV 17 voxelwise image filename
-set fmri(evs_vox_17) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev017.nii.gz
+set fmri(evs_vox_17) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev017.nii.gz
 
 # Orthogonalise EV 17 wrt EV 0
 set fmri(ortho17.0) 0
@@ -2694,7 +2694,7 @@ set fmri(tempfilt_yn18) 0
 set fmri(deriv_yn18) 0
 
 # EV 18 voxelwise image filename
-set fmri(evs_vox_18) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev018.nii.gz
+set fmri(evs_vox_18) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev018.nii.gz
 
 # Orthogonalise EV 18 wrt EV 0
 set fmri(ortho18.0) 0
@@ -2834,7 +2834,7 @@ set fmri(tempfilt_yn19) 0
 set fmri(deriv_yn19) 0
 
 # EV 19 voxelwise image filename
-set fmri(evs_vox_19) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev019.nii.gz
+set fmri(evs_vox_19) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev019.nii.gz
 
 # Orthogonalise EV 19 wrt EV 0
 set fmri(ortho19.0) 0
@@ -2974,7 +2974,7 @@ set fmri(tempfilt_yn20) 0
 set fmri(deriv_yn20) 0
 
 # EV 20 voxelwise image filename
-set fmri(evs_vox_20) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev020.nii.gz
+set fmri(evs_vox_20) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev020.nii.gz
 
 # Orthogonalise EV 20 wrt EV 0
 set fmri(ortho20.0) 0
@@ -3114,7 +3114,7 @@ set fmri(tempfilt_yn21) 0
 set fmri(deriv_yn21) 0
 
 # EV 21 voxelwise image filename
-set fmri(evs_vox_21) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev021.nii.gz
+set fmri(evs_vox_21) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev021.nii.gz
 
 # Orthogonalise EV 21 wrt EV 0
 set fmri(ortho21.0) 0
@@ -3254,7 +3254,7 @@ set fmri(tempfilt_yn22) 0
 set fmri(deriv_yn22) 0
 
 # EV 22 voxelwise image filename
-set fmri(evs_vox_22) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev022.nii.gz
+set fmri(evs_vox_22) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev022.nii.gz
 
 # Orthogonalise EV 22 wrt EV 0
 set fmri(ortho22.0) 0
@@ -3394,7 +3394,7 @@ set fmri(tempfilt_yn23) 0
 set fmri(deriv_yn23) 0
 
 # EV 23 voxelwise image filename
-set fmri(evs_vox_23) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev023.nii.gz
+set fmri(evs_vox_23) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev023.nii.gz
 
 # Orthogonalise EV 23 wrt EV 0
 set fmri(ortho23.0) 0
@@ -3534,7 +3534,7 @@ set fmri(tempfilt_yn24) 0
 set fmri(deriv_yn24) 0
 
 # EV 24 voxelwise image filename
-set fmri(evs_vox_24) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev024.nii.gz
+set fmri(evs_vox_24) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev024.nii.gz
 
 # Orthogonalise EV 24 wrt EV 0
 set fmri(ortho24.0) 0
@@ -3674,7 +3674,7 @@ set fmri(tempfilt_yn25) 0
 set fmri(deriv_yn25) 0
 
 # EV 25 voxelwise image filename
-set fmri(evs_vox_25) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev025.nii.gz
+set fmri(evs_vox_25) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev025.nii.gz
 
 # Orthogonalise EV 25 wrt EV 0
 set fmri(ortho25.0) 0
@@ -3814,7 +3814,7 @@ set fmri(tempfilt_yn26) 0
 set fmri(deriv_yn26) 0
 
 # EV 26 voxelwise image filename
-set fmri(evs_vox_26) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev026.nii.gz
+set fmri(evs_vox_26) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev026.nii.gz
 
 # Orthogonalise EV 26 wrt EV 0
 set fmri(ortho26.0) 0
@@ -3954,7 +3954,7 @@ set fmri(tempfilt_yn27) 0
 set fmri(deriv_yn27) 0
 
 # EV 27 voxelwise image filename
-set fmri(evs_vox_27) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev027.nii.gz
+set fmri(evs_vox_27) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev027.nii.gz
 
 # Orthogonalise EV 27 wrt EV 0
 set fmri(ortho27.0) 0
@@ -4094,7 +4094,7 @@ set fmri(tempfilt_yn28) 0
 set fmri(deriv_yn28) 0
 
 # EV 28 voxelwise image filename
-set fmri(evs_vox_28) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev028.nii.gz
+set fmri(evs_vox_28) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev028.nii.gz
 
 # Orthogonalise EV 28 wrt EV 0
 set fmri(ortho28.0) 0
@@ -4234,7 +4234,7 @@ set fmri(tempfilt_yn29) 0
 set fmri(deriv_yn29) 0
 
 # EV 29 voxelwise image filename
-set fmri(evs_vox_29) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev029.nii.gz
+set fmri(evs_vox_29) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev029.nii.gz
 
 # Orthogonalise EV 29 wrt EV 0
 set fmri(ortho29.0) 0
@@ -4374,7 +4374,7 @@ set fmri(tempfilt_yn30) 0
 set fmri(deriv_yn30) 0
 
 # EV 30 voxelwise image filename
-set fmri(evs_vox_30) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev030.nii.gz
+set fmri(evs_vox_30) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev030.nii.gz
 
 # Orthogonalise EV 30 wrt EV 0
 set fmri(ortho30.0) 0
@@ -4514,7 +4514,7 @@ set fmri(tempfilt_yn31) 0
 set fmri(deriv_yn31) 0
 
 # EV 31 voxelwise image filename
-set fmri(evs_vox_31) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev031.nii.gz
+set fmri(evs_vox_31) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev031.nii.gz
 
 # Orthogonalise EV 31 wrt EV 0
 set fmri(ortho31.0) 0
@@ -4654,7 +4654,7 @@ set fmri(tempfilt_yn32) 0
 set fmri(deriv_yn32) 0
 
 # EV 32 voxelwise image filename
-set fmri(evs_vox_32) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/3D_physio_ev032.nii.gz
+set fmri(evs_vox_32) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/physio_ev032.nii.gz
 
 # Orthogonalise EV 32 wrt EV 0
 set fmri(ortho32.0) 0
@@ -4794,7 +4794,7 @@ set fmri(tempfilt_yn33) 1
 set fmri(deriv_yn33) 0
 
 # EV 33 voxelwise image filename
-set fmri(evs_vox_33) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/${subject}_ses-${session}spinalcord_task-rest_bold_mc3_csf_regressor.nii.gz
+set fmri(evs_vox_33) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/${file_task_rest_bold}_mc2_csf_regressor.nii.gz
 
 # Orthogonalise EV 33 wrt EV 0
 set fmri(ortho33.0) 0
@@ -4934,7 +4934,7 @@ set fmri(tempfilt_yn34) 1
 set fmri(deriv_yn34) 0
 
 # EV 34 voxelwise image filename
-set fmri(evs_vox_34) ${analysis_path}/derivatives/${subject}/ses-${session}spinalcord/func/PNM/${subject}_ses-${session}spinalcord_task-rest_bold_mc3_wm_regressor.nii.gz
+set fmri(evs_vox_34) ${PATH_DATA_PROCESSED}/${SUBJECT}/func/PNM/${file_task_rest_bold}_mc2_wm_regressor.nii.gz
 
 # Orthogonalise EV 34 wrt EV 0
 set fmri(ortho34.0) 0
