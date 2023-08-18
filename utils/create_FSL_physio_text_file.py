@@ -105,12 +105,12 @@ def main():
 
         respiration_data_interp = np.interp(cardiac_time_data, respiration_time_data, respiration_data)  # Interpolate respiration data
 
-        # Create trigger data
-        data_collection_start = np.where((cardiac_time_data**2 - min(cardiac_time_data**2)) == 0)[0][0] # Ran into problems finding 0 cardiac_time_data index in some cases.
-        trigger_starts = np.arange(0, total_time, TR)
-        trigger_data = np.zeros(np.shape(cardiac_time_data))
-        for trigger in trigger_starts:
-            trigger_data[floor((data_collection_start+(trigger*cardiac_sampling_rate))):floor((data_collection_start+(trigger+trigger_width)*cardiac_sampling_rate))+1] = 1
+    # Create trigger data
+    data_collection_start = np.where((cardiac_time_data**2 - min(cardiac_time_data**2)) == 0)[0][0] # Ran into problems finding 0 cardiac_time_data index in some cases.
+    trigger_starts = np.arange(0, total_time, TR)
+    trigger_data = np.zeros(np.shape(cardiac_time_data))
+    for trigger in trigger_starts:
+        trigger_data[floor((data_collection_start+(trigger*cardiac_sampling_rate))):floor((data_collection_start+(trigger+trigger_width)*cardiac_sampling_rate))+1] = 1
 
     # Create Graph
     #plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)

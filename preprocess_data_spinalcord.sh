@@ -402,13 +402,12 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # Run FSL physio
         # TODO talk to merve for this
-    	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+    	  popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
         # TODO: change for custom script
         pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
-        
         mkdir -p PNM
-    	mv physio* ./PNM/
-    	mv ${file_task_rest_physio}.txt ./PNM/
+    	  mv physio* ./PNM/
+    	  mv ${file_task_rest_physio}.txt ./PNM/
 
 
         # --------------------
@@ -443,6 +442,11 @@ if [[ $SES == *"spinalcord"* ]];then
         mv mc2_tsnr.nii.gz ${file_task_rest_bold}_mc2_tsnr.nii.gz
         mv mc2_mat.tar.gz ${file_task_rest_bold}_mc2_mat.tar.gz
 
+        # Move motion regressors to .PNM
+        mv Rz.nii.gz ./PMN
+        mv Tx.nii.gz ./PNM
+        mv Ty.nii.gz ./PNM
+        
         # Create spinal cord mask and spinal canal mask
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
         file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
@@ -536,7 +540,7 @@ if [[ $SES == *"spinalcord"* ]];then
 #        ${PATH_SCRIPTS}/motion_correction/pnm_ev_3D_correction_for_motion.sh -i ../${file_task_rest_bold_mc2}.nii.gz -p physio_ev -n 32 -f mc2_mat.tar.gz -o 3D
 #        rm mc2_mat.tar.gz
        # cd ..
-        
+
         # TODO: check to create slicewise motion regressors ()
 
         cp ${PATH_SCRIPTS}/utils/denoise.fsf ./
