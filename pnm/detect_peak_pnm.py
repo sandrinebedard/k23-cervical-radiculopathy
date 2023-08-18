@@ -19,7 +19,7 @@ from scipy.signal import butter, lfilter, find_peaks
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Physio data in FSL format")  # Maybe in GE format and call, or add a flag
+        description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks")  # Maybe in GE format and call, or add a flag
     parser.add_argument('-i', required=True, type=str,
                         help="filename for pfile.physio")
     parser.add_argument('-exclude-resp', action='store_true',
