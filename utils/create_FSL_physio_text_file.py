@@ -97,6 +97,7 @@ def main():
     respiration_end = np.where(data == -8888)[0][0] - 1
     if np.abs(respiration_start - respiration_end) <= 1:
         print('No respiration data provided. Exiting')  # create with cardiac , check for pnm if no respiratory data
+        respiration_data_interp = np.zeros(len(cardiac_time_data))
     else:
         respiration_data = data[respiration_start:respiration_end+1]
         respiration_time_data = np.arange((0-((len(respiration_data)/respiration_sampling_rate)-(total_time))), total_time + 1/respiration_sampling_rate, 1/respiration_sampling_rate)
@@ -112,14 +113,14 @@ def main():
             trigger_data[floor((data_collection_start+(trigger*cardiac_sampling_rate))):floor((data_collection_start+(trigger+trigger_width)*cardiac_sampling_rate))+1] = 1
 
     # Create Graph
-    plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)
+    #plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)
 
+    respiration_data_interp = np.zeros(len(cardiac_time_data))
     # Save into txt file
-    #columns_df = ['Time', 'Respiratory Data', 'Scanner Triggers', 'Cardiac Data']
-    columns_df = ['Time', 'Scanner Triggers', 'Cardiac Data']
+    columns_df = ['Time', 'Respiratory Data', 'Scanner Triggers', 'Cardiac Data']
     df_final = pd.DataFrame(columns=columns_df)
     df_final['Time'] = cardiac_time_data
-   # df_final['Respiratory Data'] = respiration_data_interp
+    df_final['Respiratory Data'] = respiration_data_interp
     df_final['Scanner Triggers'] = trigger_data
     df_final['Cardiac Data'] = cardiac_data
 
