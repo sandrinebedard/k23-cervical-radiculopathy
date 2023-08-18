@@ -167,7 +167,7 @@ SES=$(basename "$SUBJECT")
 
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
-<<comment
+#<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -369,7 +369,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-comment
+#comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -402,8 +402,9 @@ comment
 
         # Run FSL physio
         # TODO talk to merve for this
-    	#popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-        #pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+    	popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+        # TODO: change for custom script
+        pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         
         mkdir -p PNM
     	mv physio* ./PNM/
@@ -413,7 +414,7 @@ comment
         # --------------------
         # 2D Motion correction
         # --------------------
-
+#<<comment
         # Step 1 of 2D motion correction using mid volume
         # Select mid volume
         fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
@@ -449,7 +450,7 @@ comment
         segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg'
         sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
 
-        sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz
+        sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz -qc-subject ${SUBJECT}
 
         # Create segmentation using sct_deepseg_sc
         segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'deepseg'
@@ -459,8 +460,9 @@ comment
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
-<<comment
+#comment
         # Create CSF regressor
+        file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
 	    data=${file_task_rest_bold_mc2}
         fslmaths ${data}_mean_seg -binv temp_mask
         fslmaths ${data}_mean_SC_canal_seg -mul temp_mask ${data}_csf_mask
@@ -538,7 +540,7 @@ comment
         # TODO: check to create slicewise motion regressors ()
 
         cp ${PATH_SCRIPTS}/utils/denoise.fsf ./
-        export analysis_path subject session
+        export PATH_DATA_PROCESSED SUBJECT file_task_rest_bold
         envsubst < "denoise.fsf" > "denoise_${file}.fsf"
         feat denoise_${file}.fsf
 
@@ -550,6 +552,8 @@ comment
         fslmerge -tr ${file_task_rest_bold_mc2}_pnm ${v} ${tr}
         rm $v
 
+        file_task_rest_bold_mc2_mean_seg=${file_task_rest_bold_mc2}_mean_seg # to remove
+        file_task_rest_bold_mc2_mean=${file_task_rest_bold_mc2}_mean # to remove
         # Find motion outliers
         fsl_motion_outliers -i ${file_task_rest_bold_mc2} -m ${file_task_rest_bold_mc2_mean_seg} --dvars --nomoco -o ${file_task_rest_bold_mc2}_dvars_motion_outliers.txt
 
@@ -585,7 +589,7 @@ comment
         # Bandpass temporal filtering (see fslmath)
         # nilearn check bandpass filter could be done here
         # spatial smoothing --> if in template space
-comment
+
     else
         echo "Skipping func"
     fi
