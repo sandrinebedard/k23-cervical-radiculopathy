@@ -446,7 +446,7 @@ if [[ $SES == *"spinalcord"* ]];then
         mv Rz.nii.gz ./PMN
         mv Tx.nii.gz ./PNM
         mv Ty.nii.gz ./PNM
-        
+
         # Create spinal cord mask and spinal canal mask
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
         file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
@@ -464,7 +464,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
-#comment
+<<comment
         # Create CSF regressor
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
 	    data=${file_task_rest_bold_mc2}
@@ -593,7 +593,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Bandpass temporal filtering (see fslmath)
         # nilearn check bandpass filter could be done here
         # spatial smoothing --> if in template space
-
+comment
     else
         echo "Skipping func"
     fi

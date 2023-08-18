@@ -29,7 +29,8 @@ def get_parser():
                         help="TR in seconds for each volume (i.e., sampling period of volumes)")
     parser.add_argument('-number-of-volumes', required=True, type=int,
                         help="Number of volumes collected")
-
+    parser.add_argument('-exclude-resp', action='store_true',
+                        help="To put 0 values in respiratory data")
     return parser
 
 
@@ -96,8 +97,12 @@ def main():
     respiration_start = np.where(data == -9999)[0][0] + 1
     respiration_end = np.where(data == -8888)[0][0] - 1
     if np.abs(respiration_start - respiration_end) <= 1:
-        print('No respiration data provided. Exiting')  # create with cardiac , check for pnm if no respiratory data
+        print('No respiration data provided. Setting values to 0')  # create with cardiac , check for pnm if no respiratory data
         respiration_data_interp = np.zeros(len(cardiac_time_data))
+    elif args.exclude_resp:
+        # Set 0 values if argment exclude-resp is specified
+        respiration_data_interp = np.zeros(len(cardiac_time_data))
+
     else:
         respiration_data = data[respiration_start:respiration_end+1]
         respiration_time_data = np.arange((0-((len(respiration_data)/respiration_sampling_rate)-(total_time))), total_time + 1/respiration_sampling_rate, 1/respiration_sampling_rate)
@@ -113,9 +118,8 @@ def main():
         trigger_data[floor((data_collection_start+(trigger*cardiac_sampling_rate))):floor((data_collection_start+(trigger+trigger_width)*cardiac_sampling_rate))+1] = 1
 
     # Create Graph
-    #plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)
+    plot_data(cardiac_time_data, cardiac_data, respiration_data_interp, trigger_data)
 
-    respiration_data_interp = np.zeros(len(cardiac_time_data))
     # Save into txt file
     columns_df = ['Time', 'Respiratory Data', 'Scanner Triggers', 'Cardiac Data']
     df_final = pd.DataFrame(columns=columns_df)
@@ -123,7 +127,6 @@ def main():
     df_final['Respiratory Data'] = respiration_data_interp
     df_final['Scanner Triggers'] = trigger_data
     df_final['Cardiac Data'] = cardiac_data
-
     df_final.to_csv(fname.split('.')[0]+'.txt', index=False, header=False, sep="\t")
 
 
