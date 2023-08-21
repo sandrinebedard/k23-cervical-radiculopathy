@@ -1,15 +1,41 @@
 # k23-cervical-radiculopathy
 Analysis pipeline on Cervical Radiculopathy MRI project
 
-## Data
-
-## Analysis pipeline
-### Dependencies
+## Table of content
+* [1.Dependencies](#1dependencies)
+* [2.Dataset](#2dataset)
+* [3.Analysis pipeline](#3analysis-pipeline)
+    * [3.1.Installation](#31installation)
+    * [3.2.Spinal cord preprocessing](#32spinal-cord-preprocessing)
+    * [3.3.Quality control and Manual correction](#33quality-control-and-manual-correction)
+        * [3.3.1.Correct vertebral labeling](#331correct-vertebral-labeling)
+## 1.Dependencies
 
 * SCT v6.0
-* FSL 
+* FSL 6.0
+* Python 3.8.12
 
-### Spinal cord preprocessing
+## 2.Dataset
+`MACKEYLAB\Mackeylab\PROJECTS\K23_Cervical_Radiculopathy\data\BIDS\sourcedata`
+ 
+## 3.Analysis pipeline
+
+### 3.1.Installation
+
+1. Create python environement
+~~~
+conda create --name venv-cr python==3.8.12
+~~~
+2. Activate environement
+~~~
+conda activate venv-cr
+~~~
+3. Install requirements
+~~~
+pip install -r requirements.txt
+~~~
+
+### 3.2.Spinal cord preprocessing
 
 Launch preprocessing:
 
@@ -25,7 +51,7 @@ sct_run_batch -path-data /home/sbedard/mackeylab/PROJECTS/K23_Cervical_Radiculop
 ~~~
 
 
-### Quality control and Manual correction
+### 3.3.Quality control and Manual correction
 
 After running the analysis, check your Quality Control (QC) report by opening the file `./qc/index.html`. 
 
@@ -46,7 +72,7 @@ Ensure to validate the following images:
 - DWI mean moco segmentation
  TODO: add func
 
-#### 1. Correct vertebral labeling
+#### 3.3.1.Correct vertebral labeling
 Run the following command:
 
 ~~~
