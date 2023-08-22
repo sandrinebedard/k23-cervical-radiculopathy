@@ -146,7 +146,7 @@ def main():
         data_resp_bd = lfilter(b_filt, a_filt, data_resp)
         # Select a minimum peak distance
         min_peak_dist = 300
-    
+
         data_resp_bd = data_resp # To remove if want filter
         idx_peaks_resp = find_peaks(data_resp_bd, distance=min_peak_dist)[0]
         peaks_values_resp = data_resp_bd[idx_peaks_resp]

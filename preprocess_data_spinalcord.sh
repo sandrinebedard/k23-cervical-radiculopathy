@@ -167,7 +167,7 @@ SES=$(basename "$SUBJECT")
 
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
-<<comment
+#<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -368,7 +368,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-comment
+#comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -392,10 +392,10 @@ comment
         # check dilating
         sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
         # Qc of Spinal canal segmentation
-        sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
+        sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         # Qc of mask
-        sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz
-
+        sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz -qc-subject ${SUBJECT}
+<<comment
         # Convert GE physio data to FSL format
         python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
@@ -407,12 +407,12 @@ comment
         mkdir -p PNM
     	  mv physio* ./PNM/
     	  mv ${file_task_rest_physio}.txt ./PNM/
-
+comment
 
         # --------------------
         # 2D Motion correction
         # --------------------
-<<comment
+#<<comment
         # Step 1 of 2D motion correction using mid volume
         # Select mid volume
         fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
@@ -429,9 +429,9 @@ comment
         # check dilating
         sct_maths -i mc1_mean_SC_canal_seg.nii.gz -dilate 5 -shape disk -o mc1_mask.nii.gz -dim 2
         # Qc of Spinal canal segmentation
-        sct_qc -i mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz
+        sct_qc -i mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         # Qc of mask
-        sct_qc -i  mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mask.nii.gz
+        sct_qc -i  mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mask.nii.gz -qc-subject ${SUBJECT}
 
         # Apply motion correction step 2
         ${PATH_SCRIPTS}/motion_correction/2D_slicewise_motion_correction.sh -i mc1.nii.gz -r mc1_mean.nii.gz -m mc1_mask.nii.gz -o mc2
@@ -453,18 +453,22 @@ comment
         segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg'
         sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
 
-        sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_seg.nii.gz -d  ${file_task_rest_bold}.nii.gz -qc-subject ${SUBJECT}
+        # Qc of Spinal canal segmentation
+        # TODO check for manual segmentation of spinal canal
+        sct_qc -i ${file_task_rest_bold_mc2_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
 
         # Create segmentation using sct_deepseg_sc
         segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'deepseg'
         file_task_rest_bold_mc2_mean_seg="${file_task_rest_bold_mc2_mean}_seg"
+
+        sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean_seg}.nii.gz -d  ${file_task_rest_bold}.nii.gz -qc-subject ${SUBJECT}
         
         # Register to template
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
-comment
-#<<comment
+#comment
+<<comment
         # Create CSF regressor # TODO use create slicewise regressors form mask
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
         # Create CSF mask form spinal cord seg and spinal canal seg
@@ -530,7 +534,7 @@ comment
         # Bandpass temporal filtering (see fslmath)
         # nilearn check bandpass filter could be done here
         # spatial smoothing --> if in template space
-#comment
+comment
     else
         echo "Skipping func"
     fi
