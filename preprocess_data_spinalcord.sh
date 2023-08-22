@@ -167,7 +167,7 @@ SES=$(basename "$SUBJECT")
 
 # Only include spinal cord sessions
 if [[ $SES == *"spinalcord"* ]];then
-#<<comment
+<<comment
     # -------------------------------------------------------------------------
     # T2w
     # -------------------------------------------------------------------------
@@ -222,7 +222,6 @@ if [[ $SES == *"spinalcord"* ]];then
         segment_if_does_not_exist ${file_t2star} 't2s' 'deepseg'
         file_t2star_seg="${file_t2star}_seg"
 
-        # TODO add function for GM seg to use manual seg
         # Spinal cord GM segmentation
         segment_gm_if_does_not_exist ${file_t2star}
         #sct_deepseg_gm -i ${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
@@ -369,7 +368,7 @@ if [[ $SES == *"spinalcord"* ]];then
     else
         echo "Skipping dwi"
     fi
-#comment
+comment
     file_t2star=${file}_T2star  # TO REMOVE WHEN NO COMMENTS
 
     # -------------------------------------------------------------------------
@@ -398,12 +397,12 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz
 
         # Convert GE physio data to FSL format
-        python3 $PATH_SCRIPTS/utils/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
+        python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
         # Run FSL physio
         # TODO talk to merve for this
     	  popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-        # TODO: change for custom script
+        # TODO: change for custom script use physio card in derivatives
         pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
     	  mv physio* ./PNM/
@@ -413,7 +412,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # --------------------
         # 2D Motion correction
         # --------------------
-#<<comment
+<<comment
         # Step 1 of 2D motion correction using mid volume
         # Select mid volume
         fslroi ${file_task_rest_bold} ${file_task_rest_bold}_mc1_ref 125 1
@@ -443,7 +442,7 @@ if [[ $SES == *"spinalcord"* ]];then
         mv mc2_mat.tar.gz ${file_task_rest_bold}_mc2_mat.tar.gz
 
         # Move motion regressors to .PNM
-        mv Rz.nii.gz ./PMN
+        mv Rz.nii.gz ./PNM
         mv Tx.nii.gz ./PNM
         mv Ty.nii.gz ./PNM
 
@@ -464,89 +463,27 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
-<<comment
-        # Create CSF regressor
+comment
+#<<comment
+        # Create CSF regressor # TODO use create slicewise regressors form mask
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
-	    data=${file_task_rest_bold_mc2}
-        fslmaths ${data}_mean_seg -binv temp_mask
-        fslmaths ${data}_mean_SC_canal_seg -mul temp_mask ${data}_csf_mask
+        # Create CSF mask form spinal cord seg and spinal canal seg
+        fslmaths ${file_task_rest_bold_mc2}_mean_seg -binv temp_mask
+        fslmaths ${file_task_rest_bold_mc2}_mean_SC_canal_seg -mul temp_mask ${file_task_rest_bold_mc2}_csf_mask
         rm temp_mask.nii.gz
-        fslsplit ${data}_csf_mask ${data}_csf_mask_slice -z
-        xdim=`fslval ${data} dim1`
-        ydim=`fslval ${data} dim2`
-        zdim=`fslval ${data} dim3`
-        tdim=`fslval ${data} dim4`
-        pixdimx=`fslval ${data} pixdim1`
-        pixdimy=`fslval ${data} pixdim2`
-        pixdimz=`fslval ${data} pixdim3`
-        tr=`fslval ${data} pixdim4`
-        fslsplit ${data} ${data}_slice -z
-        for ((k=0; k<$zdim; k++)) ; do
-            slice_number=$((10000+$k))
-            fslstats -t ${data}_slice${slice_number:1:4} -k ${data}_csf_mask_slice${slice_number:1:4} -m >> ${data}_slice${slice_number:1:4}_mean_csf.txt
-            fslascii2img ${data}_slice${slice_number:1:4}_mean_csf.txt 1 1 1 $tdim 1 1 1 $tr ${data}_slice${slice_number:1:4}_mean_csf
-            fslmaths ${data}_slice${slice_number:1:4}_mean_csf -Tmean mean
-            fslmaths ${data}_slice${slice_number:1:4}_mean_csf -sub mean ${data}_slice${slice_number:1:4}_mean_csf
-            rm mean.nii.gz
-            rm ${data}_slice${slice_number:1:4}_mean_csf.txt
-        done
-        v="${data}_slice0???_mean_csf.nii.gz"
-        fslmerge -z ${data}_csf_regressor $v
-        rm $v
-        v="${data}_slice0???.nii.gz"
-        rm $v
-        v="${data}_csf_mask_slice0???.nii.gz"
-        rm $v
+        ${PATH_SCRIPTS}/utils/create_slicewise_regressor_from_mask.sh -i ${file_task_rest_bold_mc2}.nii.gz -m ${file_task_rest_bold_mc2}_csf_mask.nii.gz -o csf_regressor
+        mv ${file_task_rest_bold_mc2}_csf_regressor.nii.gz ./PNM
 
-        mv ${data}_csf_regressor.nii.gz ./PNM
 
         # Create WM regressor
-        data=${file_task_rest_bold_mc2}
-        fslmaths ./label/template/PAM50_wm.nii.gz -thr 0.9 -bin ${data}_wm_mask
-        fslsplit ${data}_wm_mask ${data}_wm_mask_slice -z
-        xdim=`fslval ${data} dim1`
-        ydim=`fslval ${data} dim2`
-        zdim=`fslval ${data} dim3`
-        tdim=`fslval ${data} dim4`
-        pixdimx=`fslval ${data} pixdim1`
-        pixdimy=`fslval ${data} pixdim2`
-        pixdimz=`fslval ${data} pixdim3`
-        tr=`fslval ${data} pixdim4`
-        fslsplit ${data} ${data}_slice -z
-        for ((k=0; k<$zdim; k++)) ; do
-            slice_number=$((10000+$k))
-            fslstats -t ${data}_slice${slice_number:1:4} -k ${data}_wm_mask_slice${slice_number:1:4} -m >> ${data}_slice${slice_number:1:4}_mean_wm.txt
-            fslascii2img ${data}_slice${slice_number:1:4}_mean_wm.txt 1 1 1 $tdim 1 1 1 $tr ${data}_slice${slice_number:1:4}_mean_wm
-            fslmaths ${data}_slice${slice_number:1:4}_mean_wm -Tmean mean
-            fslmaths ${data}_slice${slice_number:1:4}_mean_wm -sub mean ${data}_slice${slice_number:1:4}_mean_wm
-            rm mean.nii.gz
-            rm ${data}_slice${slice_number:1:4}_mean_wm.txt
-        done
-        v="${data}_slice0???_mean_wm.nii.gz"
-        fslmerge -z ${data}_wm_regressor $v
-        rm $v
-        v="${data}_slice0???.nii.gz"
-        rm $v
-        v="${data}_wm_mask_slice0???.nii.gz"
-        rm $v
-
-        mv ${data}_wm_regressor.nii.gz ./PNM
-
-
-        #Correct PNM regressors for motion
-#        cd ./PNM
-#        cp  ../${file_task_rest_bold_mc2}_mat.tar.gz mc2_mat.tar.gz
-#        # 
-#        ${PATH_SCRIPTS}/motion_correction/pnm_ev_3D_correction_for_motion.sh -i ../${file_task_rest_bold_mc2}.nii.gz -p physio_ev -n 32 -f mc2_mat.tar.gz -o 3D
-#        rm mc2_mat.tar.gz
-       # cd ..
-
-        # TODO: check to create slicewise motion regressors ()
-
-        cp ${PATH_SCRIPTS}/utils/denoise.fsf ./
+        fslmaths ./label/template/PAM50_wm.nii.gz -thr 0.9 -bin ${file_task_rest_bold_mc2}_wm_mask
+        ${PATH_SCRIPTS}/utils/create_slicewise_regressor_from_mask.sh -i ${file_task_rest_bold_mc2}.nii.gz -m ${file_task_rest_bold_mc2}_wm_mask.nii.gz -o wm_regressor
+        mv ${file_task_rest_bold_mc2}_wm_regressor.nii.gz ./PNM
+        
+        cp ${PATH_SCRIPTS}/utils/denoise_no_resp.fsf ./
         export PATH_DATA_PROCESSED SUBJECT file_task_rest_bold
-        envsubst < "denoise.fsf" > "denoise_${file}.fsf"
-        feat denoise_${file}.fsf
+        envsubst < "denoise_no_resp.fsf" > "denoise_no_resp_${file}.fsf"
+        feat denoise_no_resp_${file}.fsf
 
         # Create denoised image
         fslmaths ./${file_task_rest_bold_mc2}_pnm.feat/stats/res4d.nii.gz -add ./${file_task_rest_bold_mc2}_pnm.feat/mean_func.nii.gz ${file_task_rest_bold_mc2}_pnm
@@ -593,7 +530,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Bandpass temporal filtering (see fslmath)
         # nilearn check bandpass filter could be done here
         # spatial smoothing --> if in template space
-comment
+#comment
     else
         echo "Skipping func"
     fi
