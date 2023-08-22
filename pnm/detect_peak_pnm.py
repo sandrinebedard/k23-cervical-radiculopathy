@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# Create FSL physio.txt file
+# Detect Cardiac and respiratory peaks from physio file.
 #
-# For usage, type: python create_FSL_physio_text_file.py -h
+# For usage, type: python detect_peak_pnm.py -h
 
 
 # Authors: Sandrine Bédard 
@@ -14,17 +14,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import PickEvent
 from scipy.signal import butter, lfilter, find_peaks
-
+import subprocess
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks")  # Maybe in GE format and call, or add a flag
+        description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks.")  # Maybe in GE format and call, or add a flag
     parser.add_argument('-i', required=True, type=str,
-                        help="filename for pfile.physio")
+                        help="filename for in FSL format .txt or .tsv file.")
     parser.add_argument('-exclude-resp', action='store_true',
                         help="To put 0 values in respiratory data")
-
+    parser.add_argument('-convert-to-fsl', action='store_true',
+                        help="To convert the GE physio file to FSL")
+    parser.add_argument('-TR', required=False, type=float,
+                        help="TR in seconds for each volume (i.e., sampling period of volumes). To use if -convert-to-fsl is specified")
+    parser.add_argument('-number-of-volumes', required=False, type=int,
+                        help="Number of volumes collected. To use if -convert-to-fsl is specified")
     return parser
 
 
@@ -35,7 +40,6 @@ def create_gui(idx_peaks , peak_values, data_filt, time, data_name):
     # Create a scatter plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(20,10))
     ax1.set_title(f'{data_name} data filtered with bandpass with peak detection \n Click on middle click to add points and right click to remove')
-   # plt.subplot(111)
     ax1.plot(time, data_filt)
     scatter, = ax1.plot(data['x'], data['y'], marker="o", linestyle="", picker=True)
     ax1.set_xlabel('Time')
@@ -43,7 +47,6 @@ def create_gui(idx_peaks , peak_values, data_filt, time, data_name):
     ax1.set_xlim(min(time) - 5, max(time) + 5)
 
     # Function to add data points
-    # TODO check add to select closest time to peak
     def onpick(event: PickEvent):
             x, y = event.xdata, event.ydata
             if event.button == 2:  # Middle click to add a point
@@ -52,21 +55,22 @@ def create_gui(idx_peaks , peak_values, data_filt, time, data_name):
                 print(f'Adding data x = {closest_x}, y = {y}')
                 data['x'].append(closest_x)
                 data['y'].append(y)
+                print('Now ', len(data['x']), 'of data points')
             # Update the scatter plot
             scatter.set_data(data['x'], data['y'])
             plt.draw()
 
     # Function to remove data point
     def onpick_remove(event: PickEvent):
-         # Check if the event is on a scatter point
+        # Check if the event is on a scatter point
         if event.artist == scatter:
             ind = event.ind[0]  # Get the index of the clicked point
             if event.mouseevent.button == 3:  # Right-click to remove point
                 if ind < len(data['x']):
+                    print('Removing data x = {}, y = {}'.format(data['x'][ind], data['y'][ind]))
                     del data['x'][ind]
                     del data['y'][ind]
-                    print('Removing data x = {}, y = {}'.format(data['x'][ind], data['y'][ind]))
-                    print(len(data['x']))
+                    print('Now ', len(data['x']), 'of data points')
             # Update the scatter plot
             scatter.set_data(data['x'], data['y'])
             plt.draw()
@@ -94,6 +98,16 @@ def main():
     args = parser.parse_args()
     fname = args.i
     columns = ['Time', 'Respiratory data', 'Scanner Triggers', 'Cardiac Data']
+    # Check if need to convert from GE format to FSL
+    if args.convert_to_fsl:
+        if args.TR and args.number_of_volumes:
+            args2 = [fname, args.TR, args.number_of_volumes]
+            subprocess.run(["python3", "create_FSL_physio_text_file.py", '-i', fname, 'TR', str(args.TR), '-number-of-volumes', str(args.number_of_volumes)], capture_output=True, text=True)
+            fname = fname.split('.')[0] + '.txt'
+        else:
+            raise ValueError('The flag -TR and -number-of-volumes are mandatory to use the flag -convert-to-fsl')
+
+
     df_physio = pd.read_csv(fname, sep="\t", header=None)
 
     # fetch cardiac data and time
@@ -106,9 +120,8 @@ def main():
     b_filt, a_filt = butter(1, [fcutlow/(100/2), fcuthigh/(100/2)], 'bandpass')
     data_cardiac_bd = lfilter(b_filt, a_filt, data_cardiac)
 
-    # Select a minimum peak distance 
+    # Select a minimum peak distance
     min_peak_dist = 68
-    #min_peak_dist = 80
 
     # Find peak indexes
     idx_peaks = find_peaks(data_cardiac_bd, distance=min_peak_dist)[0]
@@ -121,6 +134,7 @@ def main():
     data_peaks = pd.DataFrame()
     data_peaks['peak_card']= updated_time  #time[idx_peaks]
     data_peaks.to_csv('physio_card.txt', index=False, header=False, sep="\t")
+    print('Creating physio_card.txt')
 
     # Do the same thing for respiratory data
     if not args.exclude_resp:
@@ -140,12 +154,12 @@ def main():
         # Creat GUI graph to validate peaks
         updated_time_resp = create_gui(idx_peaks_resp, peaks_values_resp, data_resp_bd, time, 'Respiratory')
 
-        # Save data time points of cardiac peaks
+       # Save data time points of cardiac peaks
        # data_peaks = pd.DataFrame()
        # data_peaks['peak_resp']= updated_time_resp  #time[idx_peaks]
        # data_peaks.to_csv('physio_resp.txt', index=False, header=False, sep="\t")
-    else:
-         print('Creating ')
+   # else:
+    #    print('Creating ')
 
 
 
