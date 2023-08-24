@@ -398,7 +398,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz -qc-subject ${SUBJECT}
 
         # Convert GE physio data to FSL format
-        python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
+        #python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
         # Run FSL physio
         # Run popp to get physio_rep.txt
@@ -411,7 +411,7 @@ if [[ $SES == *"spinalcord"* ]];then
         else
           echo "No manual physio file found in the derivatives. Please run detect_peak_batch.sh before running spinal cord preprocessing."
         fi
-    	  popp -i ${file_task_rest_physio}_peak.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
+    	  popp -i ${file_task_rest_physio}_peak.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=5 --trigger=3 -v --pulseox_trigger
         # Run PNM using manual peak detections in derivatives
         pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
