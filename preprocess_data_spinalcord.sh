@@ -460,7 +460,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
         file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
 
-        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg' 'func'
+        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg' 'anat' # TO CHANGE IF MANUAL SC CANAL --> create a new function will be better
         sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
 
         # Qc of Spinal canal segmentation
