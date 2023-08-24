@@ -57,9 +57,10 @@ segment_if_does_not_exist() {
   local file="$1"
   local contrast="$2"
   local segmentation_method="$3"  # deepseg or propseg
+  local sub-folder="$4"
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
-  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/anat/${FILESEG}.nii.gz"
+  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/${sub-folder}/${FILESEG}.nii.gz"
   echo
   echo "Looking for manual segmentation: $FILESEGMANUAL"
   if [[ -e $FILESEGMANUAL ]]; then
@@ -183,7 +184,7 @@ if [[ $SES == *"spinalcord"* ]];then
         
         # Spinal cord segmentation
         # Note: For T2w images, we use sct_deepseg_sc with 2 kernel. Generally, it works better than sct_propseg and sct_deepseg_sc with 3d kernel.
-        segment_if_does_not_exist ${file_t2w} 't2' 'deepseg'
+        segment_if_does_not_exist ${file_t2w} 't2' 'deepseg' 'anat'
         file_t2_seg="${file_t2w}_seg"
 
         # Vertebral labeling 
@@ -219,7 +220,7 @@ if [[ $SES == *"spinalcord"* ]];then
         cd T2star
 
         # Spinal cord segmentation
-        segment_if_does_not_exist ${file_t2star} 't2s' 'deepseg'
+        segment_if_does_not_exist ${file_t2star} 't2s' 'deepseg' 'anat'
         file_t2star_seg="${file_t2star}_seg"
 
         # Spinal cord GM segmentation
@@ -269,7 +270,7 @@ if [[ $SES == *"spinalcord"* ]];then
         cd MTS
 
         # Spinal cord segmentation of MT-on contrast
-        segment_if_does_not_exist ${file_mton} 't2' 'deepseg'
+        segment_if_does_not_exist ${file_mton} 't2' 'deepseg' 'anat'
         file_mton_seg="${file_mton}_seg"
 
         # Create a mask arround the spinal cord to help co-register all MTS contrasts
@@ -334,7 +335,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_dmri_separate_b0_and_dwi -i ${file_dwi}.nii.gz -bvec ${file_bvec}
 
         # Segment spinal cord
-        segment_if_does_not_exist ${file_dwi}_dwi_mean 'dwi' 'deepseg'
+        segment_if_does_not_exist ${file_dwi}_dwi_mean 'dwi' 'deepseg' 'dwi'
 
         # Create mask arround the spinal cord
         sct_create_mask -i ${file_dwi}_dwi_mean.nii.gz -p centerline,${file_dwi}_dwi_mean_seg.nii.gz -size 35mm -o ${file_dwi}_dwi_mean_mask.nii.gz
@@ -345,7 +346,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_dwi_mean=${file_dwi}_dwi_mean
 
         # Segment spinal cord (only if it does not exist)
-        segment_if_does_not_exist ${file_dwi_mean} 'dwi' 'deepseg'
+        segment_if_does_not_exist ${file_dwi_mean} 'dwi' 'deepseg' 'dwi'
         file_dwi_seg=${file_dwi_mean}_seg
 
         # Register PAM50 T1w to dwi
@@ -385,7 +386,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_task_rest_bold_mean="${file_task_rest_bold}_mean"
         
         # Segment the spinal cord
-        segment_if_does_not_exist ${file_task_rest_bold_mean} 't2s' 'propseg'
+        segment_if_does_not_exist ${file_task_rest_bold_mean} 't2s' 'propseg' 'func'
         # Create a spinal canal mask
         sct_maths -i ${file_task_rest_bold_mean}_seg.nii.gz -add ${file_task_rest_bold_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
         # Dilate the spinal canal mask
@@ -431,7 +432,7 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # Step 2 of 2D motion correction using mean of mc1 as ref
         # Segment the spinal cord
-        segment_if_does_not_exist mc1_mean 't2s' 'propseg'
+        segment_if_does_not_exist mc1_mean 't2s' 'propseg' 'func'
         # Create a spinal canal mask
         sct_maths -i mc1_mean_seg.nii.gz -add mc1_mean_CSF_seg.nii.gz -o mc1_mean_SC_canal_seg.nii.gz
         # Dilate the spinal canal mask
@@ -459,7 +460,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
         file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
 
-        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg'
+        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg' 'func'
         sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
 
         # Qc of Spinal canal segmentation
@@ -467,7 +468,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_qc -i ${file_task_rest_bold_mc2_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
 
         # Create segmentation using sct_deepseg_sc
-        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'deepseg'
+        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'deepseg' 'func'
         file_task_rest_bold_mc2_mean_seg="${file_task_rest_bold_mc2_mean}_seg"
 
         sct_qc -i ${file_task_rest_bold_mc2}.nii.gz -p sct_fmri_moco -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean_seg}.nii.gz -d  ${file_task_rest_bold}.nii.gz -qc-subject ${SUBJECT}
