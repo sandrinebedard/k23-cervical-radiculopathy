@@ -6,9 +6,10 @@ Analysis pipeline on Cervical Radiculopathy MRI project
 * [2.Dataset](#2dataset)
 * [3.Analysis pipeline](#3analysis-pipeline)
     * [3.1.Installation](#31installation)
-    * [3.2.Spinal cord preprocessing](#32spinal-cord-preprocessing)
-    * [3.3.Quality control and Manual correction](#33quality-control-and-manual-correction)
-        * [3.3.1.Correct vertebral labeling](#331correct-vertebral-labeling)
+    * [3.2.Cardiac peak detection and QC](#32cardiac-peak-detection-and-qc)
+    * [3.3.Spinal cord preprocessing](#33spinal-cord-preprocessing)
+    * [3.4.Quality control and Manual correction](#34quality-control-and-manual-correction)
+        * [3.4.1.Correct vertebral labeling](#341correct-vertebral-labeling)
 ## 1.Dependencies
 
 * SCT v6.0
@@ -34,8 +35,17 @@ conda activate venv-cr
 ~~~
 pip install -r requirements.txt
 ~~~
+### 3.2.Cardiac peak detection and QC
+~~~
+sct_run_batch -jobs 1 -path-data /mnt/p/Mackeylab/PROJECTS/K23_Cervical_Radiculopathy/data/BIDS/sourcedata/ -path-out /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/peak_detection_all-2023-08-23 -script detect_peak_batch.sh -script-args "Sandrine Bedard" -exclude-list [ ses-baselinebrain ses-followupbrain ]
+~~~
+Where:
+* `-script-args`: Name of expert rater QCing the cardiac peaks
 
-### 3.2.Spinal cord preprocessing
+
+Copy the derivatives located `PATH_OUT/data_processed/derivatives` to the derivatives of the source data.
+
+### 3.3.Spinal cord preprocessing
 
 Launch preprocessing:
 
@@ -51,7 +61,7 @@ sct_run_batch -path-data /home/sbedard/mackeylab/PROJECTS/K23_Cervical_Radiculop
 ~~~
 
 
-### 3.3.Quality control and Manual correction
+### 3.4.Quality control and Manual correction
 
 After running the analysis, check your Quality Control (QC) report by opening the file `./qc/index.html`. 
 
@@ -72,7 +82,7 @@ Ensure to validate the following images:
 - DWI mean moco segmentation
  TODO: add func
 
-#### 3.3.1.Correct vertebral labeling
+#### 3.4.1.Correct vertebral labeling
 Run the following command:
 
 ~~~
