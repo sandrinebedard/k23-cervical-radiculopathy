@@ -15,21 +15,27 @@ import matplotlib.pyplot as plt
 from matplotlib.backend_bases import PickEvent
 from scipy.signal import butter, lfilter, find_peaks
 import subprocess
+import os
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks.")  # Maybe in GE format and call, or add a flag
+        description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks.")
     parser.add_argument('-i', required=True, type=str,
                         help="filename for in FSL format .txt or .tsv file.")
-    parser.add_argument('-exclude-resp', action='store_true',
+    parser.add_argument('-exclude-resp',  action='store_true',
                         help="To put 0 values in respiratory data")
-    parser.add_argument('-convert-to-fsl', action='store_true',
-                        help="To convert the GE physio file to FSL")
-    parser.add_argument('-TR', required=False, type=float,
-                        help="TR in seconds for each volume (i.e., sampling period of volumes). To use if -convert-to-fsl is specified")
-    parser.add_argument('-number-of-volumes', required=False, type=int,
-                        help="Number of volumes collected. To use if -convert-to-fsl is specified")
+    parser.add_argument('-min-peak-dist', type=int, default=65,
+                        help="To put 0 values in respiratory data")
+                        
+    # parser.add_argument('-convert-to-fsl', action='store_true',
+    #                     help="To convert the GE physio file to FSL")
+    # parser.add_argument('-TR', required=False, type=float,
+    #                     help="TR in seconds for each volume (i.e., sampling period of volumes). To use if -convert-to-fsl is specified")
+    # parser.add_argument('-number-of-volumes', required=False, type=int,
+    #                     help="Number of volumes collected. To use if -convert-to-fsl is specified")
+    parser.add_argument('-o', required=False, type=str,
+                        help="Output filename. If not specified, physio_card.txt")
     return parser
 
 
@@ -79,7 +85,7 @@ def create_gui(idx_peaks , peak_values, data_filt, time, data_name):
     # Connect the pick event handler
     fig.canvas.mpl_connect('pick_event', onpick_remove)
     fig.canvas.mpl_connect('button_press_event', onpick)
-    
+
     # Plot peak diff
     ax2 = plt.subplot(212)
     ax2.set_xlabel('Time (s)')
@@ -99,13 +105,16 @@ def main():
     fname = args.i
     columns = ['Time', 'Respiratory data', 'Scanner Triggers', 'Cardiac Data']
     # Check if need to convert from GE format to FSL
-    if args.convert_to_fsl:
-        if args.TR and args.number_of_volumes:
-            args2 = [fname, args.TR, args.number_of_volumes]
-            subprocess.run(["python3", "create_FSL_physio_text_file.py", '-i', fname, 'TR', str(args.TR), '-number-of-volumes', str(args.number_of_volumes)], capture_output=True, text=True)
-            fname = fname.split('.')[0] + '.txt'
-        else:
-            raise ValueError('The flag -TR and -number-of-volumes are mandatory to use the flag -convert-to-fsl')
+    # if args.convert_to_fsl:
+    #     if args.TR and args.number_of_volumes:
+    #         if os.path.isfile('./pnm/create_FSL_physio_text_file.py'):
+    #             results = subprocess.run(["python3", "./pnm/create_FSL_physio_text_file.py", '-i', fname, '-TR', str(args.TR), '-number-of-volumes', str(args.number_of_volumes)], capture_output=True, text=True)
+    #             print(results)
+    #             fname = fname.split('.')[0] + '.txt'
+    #         else:
+    #             raise ValueError('Script ./pnm/create_FSL_physio_text_file.py not found. Please ensure you have it to use -convert-to-fsl')
+    #     else:
+    #         raise ValueError('The flag -TR and -number-of-volumes are mandatory to use the flag -convert-to-fsl')
 
 
     df_physio = pd.read_csv(fname, sep="\t", header=None)
@@ -121,7 +130,7 @@ def main():
     data_cardiac_bd = lfilter(b_filt, a_filt, data_cardiac)
 
     # Select a minimum peak distance
-    min_peak_dist = 68
+    min_peak_dist = args.min_peak_dist
 
     # Find peak indexes
     idx_peaks = find_peaks(data_cardiac_bd, distance=min_peak_dist)[0]
@@ -133,12 +142,16 @@ def main():
     # Save data time points of cardiac peaks
     data_peaks = pd.DataFrame()
     data_peaks['peak_card']= updated_time  #time[idx_peaks]
-    data_peaks.to_csv('physio_card.txt', index=False, header=False, sep="\t")
-    print('Creating physio_card.txt')
+    if args.o:
+        fname_out = args.o
+    else:
+        fname_out = 'physio_card.txt'
+    data_peaks.to_csv(fname_out, index=False, header=False, sep="\t")
+    print(f'Creating {fname_out}')
 
     # Do the same thing for respiratory data
     if not args.exclude_resp:
-        data_resp= np.array(df_physio[1].to_list())
+        data_resp = np.array(df_physio[1].to_list())
         # Bandpass data resp
         fcutlow = 0.5   # low cut frequency in Hz
         fcuthigh = 2   # high cut frequency in Hz

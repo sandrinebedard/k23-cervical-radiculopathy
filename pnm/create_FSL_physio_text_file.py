@@ -127,7 +127,9 @@ def main():
     df_final['Respiratory Data'] = respiration_data_interp
     df_final['Scanner Triggers'] = trigger_data
     df_final['Cardiac Data'] = cardiac_data
-    df_final.to_csv(fname.split('.')[0]+'.txt', index=False, header=False, sep="\t")
+    fname_txt = fname.split('.')[0]+'.txt'
+    df_final.to_csv(fname_txt, index=False, header=False, sep="\t")
+    print(f'Creating {fname_txt}')
 
 
 if __name__ == '__main__':
