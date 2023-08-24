@@ -57,10 +57,10 @@ segment_if_does_not_exist() {
   local file="$1"
   local contrast="$2"
   local segmentation_method="$3"  # deepseg or propseg
-  local sub-folder="$4"
+  local subfolder="$4"
   # Update global variable with segmentation file name
   FILESEG="${file}_seg"
-  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/${sub-folder}/${FILESEG}.nii.gz"
+  FILESEGMANUAL="${PATH_DERIVATIVES}/${SUBJECT}/${subfolder}/${FILESEG}.nii.gz"
   echo
   echo "Looking for manual segmentation: $FILESEGMANUAL"
   if [[ -e $FILESEGMANUAL ]]; then
