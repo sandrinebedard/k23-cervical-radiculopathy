@@ -395,19 +395,28 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         # Qc of mask
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz -qc-subject ${SUBJECT}
-<<comment
+
         # Convert GE physio data to FSL format
         python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
         # Run FSL physio
-        # TODO talk to merve for this
+        # Run popp to get physio_rep.txt
     	  popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-        # TODO: change for custom script use physio card in derivatives
-        pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+        FILE_PHYSIO_CARD="${PATH_DERIVATIVES}/${SUBJECT}/func/${file_task_rest_physio}_card.txt"
+        echo
+        echo "Looking for manual peak detection: $FILE_PHYSIO_CARD"
+        if [[ -e $FILE_PHYSIO_CARD ]]; then
+          echo "Found! Using manual segmentation."
+          rsync -avzh $FILE_PHYSIO_CARD "${file_task_rest_physio}_card.txt"
+        else
+          echo "No manual card physio file found in the derivatives. Please run detect_peak_batch.sh before running spinal cord preprocessing."
+        fi
+        # Run PNM using manual peak detections in derivatives
+        pnm_evs -i ${file_task_rest_bold}.nii.gz -c ${file_task_rest_physio}_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
     	  mv physio* ./PNM/
     	  mv ${file_task_rest_physio}.txt ./PNM/
-comment
+        mv ${file_task_rest_physio}_card.txt ./PNM/
 
         # --------------------
         # 2D Motion correction
@@ -467,8 +476,8 @@ comment
         sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_task_rest_bold_mc2_mean}.nii.gz -dseg ${file_task_rest_bold_mc2_mean_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3 -initwarp ../anat/T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../anat/T2star/warp_${file_t2star}2PAM50_t2s.nii.gz
         
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
-#comment
-<<comment
+
+
         # Create CSF regressor # TODO use create slicewise regressors form mask
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
         # Create CSF mask form spinal cord seg and spinal canal seg
@@ -534,7 +543,7 @@ comment
         # Bandpass temporal filtering (see fslmath)
         # nilearn check bandpass filter could be done here
         # spatial smoothing --> if in template space
-comment
+
     else
         echo "Skipping func"
     fi
