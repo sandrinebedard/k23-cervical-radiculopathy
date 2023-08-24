@@ -75,16 +75,16 @@ if [[ -f ${file_task_rest_physio}.tsv ]];then
     # Convert physio file to FSL format
     python3 ${PATH_SCRIPTS}/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
     # Detect cardiac peaks, visual check, save timepoints.
-    python3 ${PATH_SCRIPTS}/pnm/detect_peak_pnm.py -i ${file_task_rest_physio}.txt -exclude-resp -o ${file_task_rest_physio}_card.txt -min-peak-dist 68 # TO CHANGE IF DOESN'T WORK
+    python3 ${PATH_SCRIPTS}/pnm/detect_peak_pnm.py -i ${file_task_rest_physio}.txt -exclude-resp -o ${file_task_rest_physio}_peak.txt -min-peak-dist 68 # TO CHANGE IF DOESN'T WORK
 
-    # Create a derivatives diretory in data_processed to put the physio_card.txt
+    # Create a derivatives diretory in data_processed to physio file with peaks
     mkdir -p $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func
     # Copy the cardiac peaks file to derivatives
-    rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/func/${file_task_rest_physio}_card.txt $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_card.txt
+    rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/func/${file_task_rest_physio}_peak.txt $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_peak.txt
     # Create a json side card
-    python3 ${PATH_SCRIPTS}/utils/create_json.py -fname ${file_task_rest_physio}_card.json -name-rater "${NAME_RATER}"
+    python3 ${PATH_SCRIPTS}/utils/create_json.py -fname ${file_task_rest_physio}_peak.json -name-rater "${NAME_RATER}"
     # Copy json sidecar to derivatives
-    rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/func/${file_task_rest_physio}_card.json $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_card.json
+    rsync -avzh $PATH_DATA_PROCESSED/${SUBJECT}/func/${file_task_rest_physio}_peak.json $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_peak.json
 
 else
     echo "${file_task_rest_physio}.tsv does not exists. Exiting"
@@ -94,8 +94,8 @@ fi
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
 FILES_TO_CHECK=(
-  "$PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_card.json" 
-  "$PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_card.txt"
+  "$PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_peak.json" 
+  "$PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/${file_task_rest_physio}_peak.txt"
 )
 pwd
 for file in ${FILES_TO_CHECK[@]}; do

@@ -401,18 +401,18 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # Run FSL physio
         # Run popp to get physio_rep.txt
-    	  popp -i ${file_task_rest_physio}.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
-        FILE_PHYSIO_CARD="${PATH_DERIVATIVES}/${SUBJECT}/func/${file_task_rest_physio}_card.txt"
+        FILE_PHYSIO_CARD="${PATH_DERIVATIVES}/${SUBJECT}/func/${file_task_rest_physio}_peak.txt"
         echo
         echo "Looking for manual peak detection: $FILE_PHYSIO_CARD"
         if [[ -e $FILE_PHYSIO_CARD ]]; then
           echo "Found! Using manual segmentation."
-          rsync -avzh $FILE_PHYSIO_CARD "${file_task_rest_physio}_card.txt"
+          rsync -avzh $FILE_PHYSIO_CARD "${file_task_rest_physio}_peak.txt"
         else
-          echo "No manual card physio file found in the derivatives. Please run detect_peak_batch.sh before running spinal cord preprocessing."
+          echo "No manual physio file found in the derivatives. Please run detect_peak_batch.sh before running spinal cord preprocessing."
         fi
+    	  popp -i ${file_task_rest_physio}_peak.txt -o ./physio -s 100 --tr=3.0 --smoothcard=0.1 --smoothresp=0.1 --resp=2 --cardiac=4 --trigger=3 -v
         # Run PNM using manual peak detections in derivatives
-        pnm_evs -i ${file_task_rest_bold}.nii.gz -c ${file_task_rest_physio}_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
+        pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
     	  mv physio* ./PNM/
     	  mv ${file_task_rest_physio}.txt ./PNM/
