@@ -191,9 +191,9 @@ if [[ $SES == *"spinalcord"* ]];then
         file_t2_labels="${file_t2w}_seg_labeled"
         file_t2_labels_discs="${file_t2w}_seg_labeled_discs"
 
-        # Extract dics 3 to 8 for registration to template (C2-C3 to C7-T1)
-        sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 3,4,5,6,7,8 -o ${file_t2_labels_discs}_3to8.nii.gz
-        file_t2_labels_discs="${file_t2w}_seg_labeled_discs_3to8"
+        # Extract dics 3 to 8 for registration to template (C1 to T1-T2)
+        sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 1,2,3,4,5,6,7,8,9 -o ${file_t2_labels_discs}_1to9.nii.gz
+        file_t2_labels_discs="${file_t2w}_seg_labeled_discs_1to9"
 
         # Register T2w image to PAM50 template using all discs (C2-C3 to C7-T1)
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
