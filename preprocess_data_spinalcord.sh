@@ -3,7 +3,7 @@
 # Analayses spinal cord data for the K23 Cervical Radiculopathy project
 #
 # Usage:
-#     sct_run_batch -c <PATH_TO_REPO>/etc/config_process_data.json
+#     sct_run_batch -c <PATH_TO_REPO>/etc/config_process_data.json  # TODO
 #
 # The following global variables are retrieved from the caller sct_run_batch
 # but could be overwritten by uncommenting the lines below:
@@ -19,7 +19,7 @@
 #
 #
 #
-# Authors: Sandrine Bedard and Kenneth Weber
+# Authors: Sandrine Bédard and Kenneth Weber
 #
 
 # Uncomment for full verbose
@@ -377,7 +377,7 @@ if [[ $SES == *"spinalcord"* ]];then
     cd ../func
     file_task_rest_bold="${file}_task-rest_bold"
     file_task_rest_physio="${file}_task-rest_physio"
-    # Check if all DWI files exists
+    # Check if func files exists
     if [[ -f ${file_task_rest_bold}.nii.gz ]];then
 
         # Compute mean image
