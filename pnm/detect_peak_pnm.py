@@ -33,29 +33,33 @@ def get_parser():
 
 def create_gui(idx_peaks, peak_values, data_filt, data_name):
     # Initialize data
+    idx = np.arange(0, len(data_filt))
     data = {'x': list(idx_peaks), 'y': list(peak_values)}
     # Create a scatter plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(20, 10))
     ax1.set_title(f'{data_name} data filtered with bandpass with peak detection \n Click on middle click to add points and right click to remove')
     ax1.plot(data_filt)
     scatter, = ax1.plot(data['x'], data['y'], marker="o", linestyle="", picker=True)
+
     ax1.set_xlabel('Index')
     ax1.set_ylim(0, max(data_filt)*1.5)
     ax1.set_xlim(min(idx_peaks) - 5, max(idx_peaks) + 5)
 
     # Function to add data points
     def onpick(event: PickEvent):
-            x, y = event.xdata, event.ydata
-            if event.button == 2:  # Middle click to add a point
-                # Find correct x data
-                closest_x = min(idx_peaks, key=lambda x_idx: abs(x_idx - x))
-                print(f'Adding data x = {closest_x}, y = {y}')
-                data['x'].append(closest_x)
-                data['y'].append(y)
-                print('Now ', len(data['x']), 'of data points')
-            # Update the scatter plot
-            scatter.set_data(data['x'], data['y'])
-            plt.draw()
+        x, y = event.xdata, event.ydata
+        if event.button == 2:  # Middle click to add a point
+            # Find correct x data
+            closest_x = min(idx, key=lambda x_idx: abs(x_idx - x))
+            #closest_x = x
+            print(f'Adding data x = {closest_x}, y = {y}')
+            data['x'].append(closest_x)
+            #idx_peaks.append(closest_x)
+            data['y'].append(y)
+            print('Now ', len(data['x']), 'of data points')
+        # Update the scatter plot
+        scatter.set_data(data['x'], data['y'])
+        plt.draw()
 
     # Function to remove data point
     def onpick_remove(event: PickEvent):
