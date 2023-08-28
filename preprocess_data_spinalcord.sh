@@ -416,7 +416,7 @@ if [[ $SES == *"spinalcord"* ]];then
         pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
     	  mv physio* ./PNM/
-    	  mv ${file_task_rest_physio}.txt ./PNM/
+    	#  mv ${file_task_rest_physio}.txt ./PNM/
         mv ${file_task_rest_physio}_peak.txt ./PNM/
 
         # --------------------
