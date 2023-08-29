@@ -88,3 +88,9 @@ Run the following command:
 ~~~
  python manual_correction.py -config /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/qc_fail/qc_fail_disc.yml  -path-img /mnt/p/Mackeylab/Individual_Folders/Sandrine/sc_analysis_test_2023-08-14-all-v3/data_processed/ -suffix-files-label _labels-disc-manual -path-out /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/derivatives/labels
 ~~~
+
+
+## Statistical analysis
+~~~
+python analyse_anatomical.py -i-folder /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/test_csa_2023-08-29-v3/results/ -session baseline -o-folder /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/results_2023-08-29
+~~~
