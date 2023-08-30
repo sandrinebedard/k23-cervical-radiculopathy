@@ -196,11 +196,14 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_label_utils -i ${file_t2_labels_discs}.nii.gz -keep 1,2,3,4,5,6,7,8,9 -o ${file_t2_labels_discs}_1to9.nii.gz
         file_t2_labels_discs="${file_t2w}_seg_labeled_discs_1to9"
 
+        # Compute CSA perlevel
+        sct_process_segmentation -i ${file_t2_seg}.nii.gz -vertfile ${file_t2_labels}.nii.gz -vert 2:8 -perlevel 1 -o ${PATH_RESULTS}/t2w_shape_perlevel.csv -append 1
+        # Compute CSA in PAM50 anatomical space perslice
+        sct_process_segmentation -i ${file_t2_seg}.nii.gz -vertfile ${file_t2_labels}.nii.gz -perslice 1 -normalize-PAM50 1 -v 2 -o ${PATH_RESULTS}/t2w_shape_PAM50.csv -append 1
+        
         # Register T2w image to PAM50 template using all discs (C2-C3 to C7-T1)
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
-        # TODO:
-        # Add CSA computation where?
         cd ..
     else
         echo Skipping T2w
@@ -238,8 +241,9 @@ if [[ $SES == *"spinalcord"* ]];then
         # Bring PAM50 template to T2star space
         sct_warp_template -d ${file_t2star}.nii.gz -w warp_PAM50_t2s2${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
-        # TODO:
-        # - add GM CSA measures
+        # Compute GM CSA (perlevel)
+        sct_process_segmentation -i ${file_t2star_gmseg}.nii.gz -vert 2:8 -angle-corr 0 -perlevel 1 -vertfile ./labels/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/t2star_gm_csa.csv -append 1
+        
 
         cd ..
     else
@@ -381,6 +385,11 @@ if [[ $SES == *"spinalcord"* ]];then
     # Check if func files exists
     if [[ -f ${file_task_rest_bold}.nii.gz ]];then
 
+        # Cut slices 0 and 1 for sub-HC022_ses-baselinespinalcord
+        if [[ $SUBJECT == *"sub-HC022_ses-baselinespinalcord"* ]];then
+          sct_crop_image -i ${file_task_rest_bold}.nii.gz -zmin 2  
+          mv ${file_task_rest_bold}.nii.gz ${file_task_rest_bold}_crop.nii.gz
+        fi
         # Compute mean image
         sct_maths -i ${file_task_rest_bold}.nii.gz -mean t -o ${file_task_rest_bold}_mean.nii.gz
         file_task_rest_bold_mean="${file_task_rest_bold}_mean"
@@ -392,6 +401,12 @@ if [[ $SES == *"spinalcord"* ]];then
         # Dilate the spinal canal mask
         # check dilating
         sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+        
+        # Dilate the mask more for sub-CR008-ses-baselinespinalcord
+        if [[ $SUBJECT == *"CR008_ses-beaselinespinalcord"* ]];then
+            sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 10 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+        fi
+        
         # Qc of Spinal canal segmentation
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         # Qc of mask
