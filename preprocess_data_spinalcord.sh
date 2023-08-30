@@ -386,7 +386,7 @@ if [[ $SES == *"spinalcord"* ]];then
     if [[ -f ${file_task_rest_bold}.nii.gz ]];then
 
         # Cut slices 0 and 1 for sub-HC022_ses-baselinespinalcord
-        if [[ $SUBJECT == *"sub-HC022_ses-baselinespinalcord"* ]];then
+        if [[ $file_task_rest_bold == *"sub-HC022_ses-baselinespinalcord"* ]];then
           sct_crop_image -i ${file_task_rest_bold}.nii.gz -zmin 2  
           mv ${file_task_rest_bold}.nii.gz ${file_task_rest_bold}_crop.nii.gz
         fi
@@ -403,7 +403,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
         
         # Dilate the mask more for sub-CR008-ses-baselinespinalcord
-        if [[ $SUBJECT == *"CR008_ses-beaselinespinalcord"* ]];then
+        if [[ $file_task_rest_bold == *"CR008_ses-baselinespinalcord"* ]];then
             sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 10 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
         fi
         
