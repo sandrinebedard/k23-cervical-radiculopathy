@@ -242,7 +242,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_t2star}.nii.gz -w warp_PAM50_t2s2${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         # Compute GM CSA (perlevel)
-        sct_process_segmentation -i ${file_t2star_gmseg}.nii.gz -vert 2:8 -angle-corr 0 -perlevel 1 -vertfile ./labels/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/t2star_gm_csa.csv -append 1
+        sct_process_segmentation -i ${file_t2star_gmseg}.nii.gz -vert 2:8 -angle-corr 0 -perlevel 1 -vertfile $PWD/labels/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/t2star_gm_csa.csv -append 1
         
 
         cd ..
