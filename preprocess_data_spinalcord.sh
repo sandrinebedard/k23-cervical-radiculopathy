@@ -388,7 +388,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Cut slices 0 and 1 for sub-HC022_ses-baselinespinalcord
         if [[ $file_task_rest_bold == *"sub-HC022_ses-baselinespinalcord"* ]];then
           sct_crop_image -i ${file_task_rest_bold}.nii.gz -zmin 2  
-          mv ${file_task_rest_bold}.nii.gz ${file_task_rest_bold}_crop.nii.gz
+          mv ${file_task_rest_bold}_crop.nii.gz ${file_task_rest_bold}.nii.gz
         fi
         # Compute mean image
         sct_maths -i ${file_task_rest_bold}.nii.gz -mean t -o ${file_task_rest_bold}_mean.nii.gz
