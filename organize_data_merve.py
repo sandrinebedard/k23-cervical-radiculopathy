@@ -10,6 +10,7 @@ import shutil
 import argparse
 import json
 import pandas as pd
+import subprocess
 
 
 def get_parser():
@@ -97,7 +98,7 @@ def create_dataset_description(path_output):
         "Co-authors (LastName, FirstName ; LastName, FirstName ...)": "Weber, Kenneth A.; Bedard, Sandrine",
         "Contact person (FirstName LastName email)": "Sandrine Bedard sbedard@stanford.edu",
         "Reference": " ",
-        "Funding info": " "
+        "Funding info": "National Institute of Neurological Disorders and Stroke of the National Institutes of Health (USA) under award number K23NS104211"
         }
 
     write_json(path_output, 'dataset_description.json', data_json)
@@ -172,6 +173,9 @@ def main():
                     os.makedirs(path_out_subject_moco)
                 fname_new_bold_moco_image = os.path.join(path_out_subject_moco, subject_new + '_task-rest_desc-moco_bold.nii.gz')
                 shutil.copyfile(fname_old_bold_moco_image, fname_new_bold_moco_image)
+                # Keep only first 20 volumes
+                os.system(f'fslroi {fname_new_bold_moco_image} {fname_new_bold_moco_image} 0 20')
+
                 fname_new_bold_moco_json = os.path.join(path_out_subject_moco, subject_new + '_task-rest_desc-moco_bold.json')
                 shutil.copyfile(fname_old_bold_moco_json, fname_new_bold_moco_json)
                 fname_new_bold_moco_mean = os.path.join(path_out_subject_moco, subject_new + '_task-rest_desc-mocomean_bold.nii.gz')
