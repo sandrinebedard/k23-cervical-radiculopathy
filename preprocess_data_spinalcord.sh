@@ -242,7 +242,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_t2star}.nii.gz -w warp_PAM50_t2s2${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         # Get vertebral coverage
-        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o vert_coverage_t2star.csv
+        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o ${PATH_RESULTS}/vert_coverage_t2star.csv
         
         # Compute GM CSA (perlevel)
         sct_process_segmentation -i ${file_t2star_gmseg}.nii.gz -vert 2:8 -angle-corr 0 -perlevel 1 -vertfile ./label/template/PAM50_levels.nii.gz -o ${PATH_RESULTS}/t2star_gm_csa.csv -append 1
@@ -316,7 +316,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o t1map2template.nii.gz -x linear
 
         # Get vertebral coverage
-        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o vert_coverage_mton.csv
+        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o ${PATH_RESULTS}/vert_coverage_mton.csv
 
         # TODO
         # Do we want to extract metrics at certain levels? regions of interest?
@@ -363,7 +363,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_dwi_mean}.nii.gz -w warp_PAM50_t12${file_dwi_mean}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         # Get vertebral coverage
-        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o vert_coverage_dwi.csv
+        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o ${PATH_RESULTS}/vert_coverage_dwi.csv
 
         # Create mask around the spinal cord (for faster computing)
         sct_maths -i ${file_dwi_seg}.nii.gz -dilate 1 -shape ball -o ${file_dwi_seg}_dil.nii.gz
@@ -515,7 +515,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # TODO
 
         # Get vertebral coverage
-        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o vert_coverage_func.csv
+        python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o ${PATH_RESULTS}/vert_coverage_func.csv
 
         # Create CSF regressor
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
