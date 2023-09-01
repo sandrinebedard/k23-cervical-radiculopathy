@@ -475,11 +475,20 @@ if [[ $SES == *"spinalcord"* ]];then
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2
         file_task_rest_bold_mc2_mean=${file_task_rest_bold}_mc2_mean
 
-        segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg' 'anat' # TO CHANGE IF MANUAL SC CANAL --> create a new function will be better
-        sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
+        FILE_SPINAL_CANAL_SEG="${PATH_DERIVATIVES}/${SUBJECT}/func/${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz"
+        echo
+        echo "Looking for manual spinal canal segmentation: $FILE_SPINAL_CANAL_SEG"
+        if [[ -e $FILE_SPINAL_CANAL_SEG ]]; then
+          echo "Found! Using manual segmentation."
+          rsync -avzh $FILE_SPINAL_CANAL_SEG "${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz"
+        else
+          echo "No manual spinal canal segmentation found in the derivatives. Running automatic segmentation."
+          segment_if_does_not_exist ${file_task_rest_bold_mc2_mean} 't2s' 'propseg' 'anat'
+          sct_maths -i ${file_task_rest_bold_mc2_mean}_seg.nii.gz -add ${file_task_rest_bold_mc2_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz
+
+        fi
 
         # Qc of Spinal canal segmentation
-        # TODO check for manual segmentation of spinal canal
         sct_qc -i ${file_task_rest_bold_mc2_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mc2_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
 
         # Create segmentation using sct_deepseg_sc
@@ -494,7 +503,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_warp_template -d ${file_task_rest_bold_mc2_mean}.nii.gz -w warp_PAM50_t2s2${file_task_rest_bold_mc2_mean}.nii.gz
 
 
-        # Create CSF regressor # TODO use create slicewise regressors form mask
+        # Create CSF regressor
         file_task_rest_bold_mc2=${file_task_rest_bold}_mc2  # to remove
         # Create CSF mask form spinal cord seg and spinal canal seg
         fslmaths ${file_task_rest_bold_mc2}_mean_seg -binv temp_mask
