@@ -560,7 +560,7 @@ if [[ $SES == *"spinalcord"* ]];then
         last_volume=$(echo "scale=0; $tdimi-1" | bc) # Find index of last volume
         for ((k=0; k<=$last_volume; k++));do
             vol="$(printf "vol%04d" ${k})"
-            sct_apply_transfo -i ${vol}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2s.nii.gz -o ${vol}2template.nii.gz -x spline
+            sct_apply_transfo -i ${vol}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2.nii.gz -o ${vol}2template.nii.gz -x spline
             fslmaths ${vol}2template.nii.gz -mul ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz ${vol}2template.nii.gz
             fslroi ${vol}2template.nii.gz ${vol}2template.nii.gz 32 75 34 75 691 263
         done
