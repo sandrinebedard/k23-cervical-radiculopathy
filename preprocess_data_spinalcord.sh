@@ -236,7 +236,7 @@ if [[ $SES == *"spinalcord"* ]];then
         file_t2star_wmseg="${file_t2star}_wmseg"
 
         # Register PAM50 T2s template to T2star using the WM segmentation
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_wm.nii.gz -d ${file_t2star}.nii.gz -dseg ${file_t2star_wmseg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=3:step=3,type=im,algo=syn,slicewise=1,iter=1,metric=CC -initwarp ../T2w/warp_template2anat.nii.gz -initwarpinv ../T2w/warp_anat2template.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_wm.nii.gz -d ${file_t2star}.nii.gz -dseg ${file_t2star_wmseg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,slicewise=1,iter=10:step=3,type=im,algo=syn,slicewise=1,iter=1,metric=CC -initwarp ../T2w/warp_template2anat.nii.gz -initwarpinv ../T2w/warp_anat2template.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
         # Bring PAM50 template to T2star space
         sct_warp_template -d ${file_t2star}.nii.gz -w warp_PAM50_t2s2${file_t2star}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
@@ -298,22 +298,22 @@ if [[ $SES == *"spinalcord"* ]];then
         cp ${file_MTS_t1w}.json ${file_MTS_t1w}_reg.json
         sct_compute_mtsat -mt ${file_mton}.nii.gz -pd ${file_mtoff}_reg.nii.gz -t1 ${file_MTS_t1w}_reg.nii.gz
         
-        # Resgister PAM50 t2star template to MTon
-        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2s.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,metric=MeanSquares,slicewise=1,iter=3:step=3,type=im,algo=syn,metric=CC,iter=3,slicewise=1 -initwarp ../T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        # Resgister PAM50 t2w template to MTon
+        sct_register_multimodal -i ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -iseg ${SCT_DIR}/data/PAM50/template/PAM50_cord.nii.gz -d ${file_mton}.nii.gz -dseg ${file_mton_seg}.nii.gz -param step=1,type=seg,algo=centermass:step=2,type=seg,algo=bsplinesyn,metric=MeanSquares,slicewise=1,iter=3:step=3,type=im,algo=syn,metric=CC,iter=1,slicewise=1 -initwarp ../T2star/warp_PAM50_t2s2${file_t2star}.nii.gz -initwarpinv ../T2star/warp_${file_t2star}2PAM50_t2s.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
 
         # Warp template to MTon space
-        sct_warp_template -d ${file_mton}.nii.gz -w warp_PAM50_t2s2${file_mton}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
+        sct_warp_template -d ${file_mton}.nii.gz -w warp_PAM50_t22${file_mton}.nii.gz -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
         # Warp to template for potential group analysis
         # TODO check to add same croping as done for func
         # Warp MTR to PAM50 template
-        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o mtr2template.nii.gz -x linear
+        sct_apply_transfo -i mtr.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2.nii.gz -o mtr2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o mtsat2template.nii.gz -x linear
+        sct_apply_transfo -i mtsat.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2.nii.gz -o mtsat2template.nii.gz -x linear
 
         # Warp MTsat to PAM50 template
-        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2s.nii.gz -o t1map2template.nii.gz -x linear
+        sct_apply_transfo -i t1map.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_mton}2PAM50_t2.nii.gz -o t1map2template.nii.gz -x linear
 
         # Get vertebral coverage
         python $PATH_SCRIPTS/utils/get_vertebral_coverage.py -vertfile ./label/template/PAM50_levels.nii.gz -subject ${SUBJECT} -o ${PATH_RESULTS}/vert_coverage_mton.csv
@@ -439,7 +439,6 @@ if [[ $SES == *"spinalcord"* ]];then
         pnm_evs -i ${file_task_rest_bold}.nii.gz -c physio_card.txt -r physio_resp.txt -o physio_ --tr=3.0 --oc=4 --or=4 --multc=2 --multr=2 --sliceorder=interleaved_up --slicedir=z
         mkdir -p PNM
     	  mv physio* ./PNM/
-    	#  mv ${file_task_rest_physio}.txt ./PNM/
         mv ${file_task_rest_physio}_peak.txt ./PNM/
 
         # --------------------
@@ -571,7 +570,7 @@ if [[ $SES == *"spinalcord"* ]];then
         rm $v
 
         #Remove outside voxels based on spinal cord mask z limits
-        sct_apply_transfo -i ${file_task_rest_bold_mc2_mean_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2s.nii.gz -o ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz -x nn
+        sct_apply_transfo -i ${file_task_rest_bold_mc2_mean_seg}.nii.gz -d ${SCT_DIR}/data/PAM50/template/PAM50_t2.nii.gz -w warp_${file_task_rest_bold_mc2_mean}2PAM50_t2.nii.gz -o ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz -x nn
         fslroi ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz 32 75 34 75 691 263
         fslmaths ${file_task_rest_bold_mc2_mean_seg}2template.nii.gz -kernel 2 -dilD -dilD -dilD -dilD -dilD temp_mask
         fslmaths ${file_task_rest_bold_mc2}_pnm_stc2template -mul temp_mask ${file_task_rest_bold_mc2}_pnm_stc2template
