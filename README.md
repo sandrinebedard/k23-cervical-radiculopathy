@@ -18,7 +18,52 @@ Analysis pipeline on Cervical Radiculopathy MRI project
 
 ## 2.Dataset
 `MACKEYLAB\Mackeylab\PROJECTS\K23_Cervical_Radiculopathy\data\BIDS\sourcedata`
- 
+The data has the following organization:
+
+sourcedata
+│
+├── dataset_description.json
+├── participants.json
+├── participants.tsv
+├── sub-CR001
+├── sub-CR002
+│   │
+│   ├── ses-baselinespinalcord
+│   │
+│   └──  ses-followupspinalcord
+|       ├── anat
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-T1w_MTS.json
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-T1w_MTS.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MTon_MTS.json
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MTon_MTS.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MToff_MTS.json
+│       │  └── sub-CR002_ses-followupspinalcord_acq-MToff_MTS.nii.gz
+|       ├── anat
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-T1w_MTS.json
+└── derivatives
+    │
+    └── labels
+        └── sub-1000710
+            │
+            └── anat
+                ├── sub-1000710_T1w_seg-manual.nii.gz  <---------- manually-corrected spinal cord segmentation
+                ├── sub-1000710_T1w_seg-manual.json  <------------ information about origin of segmentation
+                ├── sub-1000710_T1w_labels-manual.nii.gz  <------- manual vertebral labels
+                ├── sub-1000710_T1w_labels-manual.json
+                ├── sub-1000710_T1w_pmj-manual.nii.gz  <------- manual pmj label
+                ├── sub-1000710_T1w_pmj-manual.json
+                ├── sub-1000710_T2w_seg-manual.nii.gz  <---------- manually-corrected spinal cord segmentation
+                └── sub-1000710_T2w_seg-manual.json
+
+
 ## 3.Analysis pipeline
 
 ### 3.1.Installation
