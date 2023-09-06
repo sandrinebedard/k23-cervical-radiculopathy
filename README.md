@@ -20,6 +20,7 @@ Analysis pipeline on Cervical Radiculopathy MRI project
 `MACKEYLAB\Mackeylab\PROJECTS\K23_Cervical_Radiculopathy\data\BIDS\sourcedata`
 The data has the following organization:
 
+~~~
 sourcedata
 │
 ├── dataset_description.json
@@ -72,7 +73,7 @@ derivatives
                       ├── sub-CR002_ses-followupspinalcord_task-rest_bold_mc2_mean_SC_canal_seg.nii.gz  <------------ information about origin of segmentation
                       ├── sub-CR002_ses-followupspinalcord_task-rest_physio_peak.json  <------- manual cardiac peak detection added to physio file in FSl format
                       └──sub-CR002_ses-followupspinalcord_task-rest_physio_peak.txt
-
+~~~
 
 ## 3.Analysis pipeline
 
