@@ -204,6 +204,30 @@ if [[ $SES == *"spinalcord"* ]];then
         # Register T2w image to PAM50 template using all discs (C2-C3 to C7-T1)
         sct_register_to_template -i ${file_t2w}.nii.gz -s ${file_t2_seg}.nii.gz -ldisc ${file_t2_labels_discs}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
         
+        # Warp template to T2w image (to get right left hemicord)
+        sct_warp_template -d ${file_t2w}.nii.gz -w warp_template2anat.nii.gz
+        
+        # Create left hemicord
+        sct_maths -i label/atlas/PAM50_atlas_00.nii.gz -add label/atlas/PAM50_atlas_02.nii.gz label/atlas/PAM50_atlas_04.nii.gz label/atlas/PAM50_atlas_06.nii.gz label/atlas/PAM50_atlas_08.nii.gz label/atlas/PAM50_atlas_10.nii.gz label/atlas/PAM50_atlas_12.nii.gz label/atlas/PAM50_atlas_14.nii.gz label/atlas/PAM50_atlas_16.nii.gz label/atlas/PAM50_atlas_18.nii.gz label/atlas/PAM50_atlas_20.nii.gz label/atlas/PAM50_atlas_22.nii.gz label/atlas/PAM50_atlas_24.nii.gz label/atlas/PAM50_atlas_26.nii.gz label/atlas/PAM50_atlas_28.nii.gz label/atlas/PAM50_atlas_30.nii.gz label/atlas/PAM50_atlas_32.nii.gz label/atlas/PAM50_atlas_34.nii.gz -o PAM50_atlas_left_hemi_cord.nii.gz
+        # Create right hemicord
+        sct_maths -i label/atlas/PAM50_atlas_01.nii.gz -add label/atlas/PAM50_atlas_03.nii.gz label/atlas/PAM50_atlas_05.nii.gz label/atlas/PAM50_atlas_07.nii.gz label/atlas/PAM50_atlas_09.nii.gz label/atlas/PAM50_atlas_11.nii.gz label/atlas/PAM50_atlas_13.nii.gz label/atlas/PAM50_atlas_15.nii.gz label/atlas/PAM50_atlas_17.nii.gz label/atlas/PAM50_atlas_19.nii.gz label/atlas/PAM50_atlas_21.nii.gz label/atlas/PAM50_atlas_23.nii.gz label/atlas/PAM50_atlas_25.nii.gz label/atlas/PAM50_atlas_27.nii.gz label/atlas/PAM50_atlas_29.nii.gz label/atlas/PAM50_atlas_31.nii.gz label/atlas/PAM50_atlas_33.nii.gz label/atlas/PAM50_atlas_35.nii.gz -o PAM50_atlas_right_hemi_cord.nii.gz
+        # Binarize both masks
+        sct_maths -i PAM50_atlas_right_hemi_cord.nii.gz -bin 0.5 -o PAM50_atlas_right_hemi_cord_bin.nii.gz
+        sct_maths -i PAM50_atlas_left_hemi_cord.nii.gz -bin 0.5 -o PAM50_atlas_left_hemi_cord_bin.nii.gz
+        
+        # Create right and left hemicord masks of T2w
+        python3 $PATH_SCRIPTS/create_right_left_seg_mask.py -seg ${file_t2_seg}.nii.gz -PAM50-R PAM50_atlas_right_hemi_cord_bin.nii.gz -PAM50_L PAM50_atlas_left_hemi_cord_bin.nii.gz
+        
+        # Compute Right CSA
+        # Compute CSA perlevel
+        sct_process_segmentation -i ${file_t2_seg}_right.nii.gz -vertfile ${file_t2_labels}.nii.gz -vert 2:8 -perlevel 1 -o ${PATH_RESULTS}/t2w_shape_right_perlevel.csv -append 1
+        # Compute CSA in PAM50 anatomical space perslice
+        sct_process_segmentation -i ${file_t2_seg}_right.nii.gz -vertfile ${file_t2_labels}.nii.gz -perslice 1 -normalize-PAM50 1 -v 2 -o ${PATH_RESULTS}/t2w_shape_right_PAM50.csv -append 1
+        # Compute Left CSA
+        # Compute CSA perlevel
+        sct_process_segmentation -i ${file_t2_seg}_left.nii.gz -vertfile ${file_t2_labels}.nii.gz -vert 2:8 -perlevel 1 -o ${PATH_RESULTS}/t2w_shape_left_perlevel.csv -append 1
+        # Compute CSA in PAM50 anatomical space perslice
+        sct_process_segmentation -i ${file_t2_seg}_left.nii.gz -vertfile ${file_t2_labels}.nii.gz -perslice 1 -normalize-PAM50 1 -v 2 -o ${PATH_RESULTS}/t2w_shape_left_PAM50.csv -append 1
         cd ..
     else
         echo Skipping T2w
