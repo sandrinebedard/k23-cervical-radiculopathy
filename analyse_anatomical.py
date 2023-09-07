@@ -65,8 +65,8 @@ def get_parser():
                         help="Results folder of spinal cord preprocessing")
     parser.add_argument("-session",
                         required=True,
-                        choices=['baseline','followup'],
-                        default='baseline',
+                        choices=['ses-baselinespinalcord','ses-followupspinalcord'],
+                        default='ses-baselinespinalcord',
                         help="Session to analyse")
     parser.add_argument("-o-folder",
                         type=str,
@@ -168,14 +168,23 @@ def get_vert_indices(df):
 
 def read_t2w_pam50(fname, session=None, exclude_list=None):
     data = pd.read_csv(fname)
-    print(data['Filename'])
     # Filter with session first
     data['participant_id'] = (data['Filename'].str.split('/').str[-1]).str.replace('_T2w_seg.nii.gz', '')
     data['session'] = data['participant_id'].str.split('_').str[-1]
     data['group'] = data['participant_id'].str.split('_').str[-2].str.split('-').str[-1].str[0:2]
     print('Subjects', np.unique(data['participant_id'].to_list()))
-    return data
+    return data.loc[data['session'] == session]
 
+
+def get_number_subjects(df, session):
+    
+    list_subject = np.unique(df['participant_id'].to_list())
+    list_session = [subject for subject in list_subject if session in subject]
+    nb_subjects_session = len(list_session)
+    nb_subject_CR = len([subject for subject in list_session if 'CR' in subject])
+    nb_subject_HC = len([subject for subject in list_session if 'CR' in subject])
+    logger.info(f'Total number of subject for {session}: {nb_subjects_session}')
+    logger.info(f'With CR = {nb_subject_CR} and HC = {nb_subject_HC}')
 
 
 def create_lineplot(df, hue, path_out):
@@ -227,7 +236,6 @@ def create_lineplot(df, hue, path_out):
         # Insert a vertical line for each intervertebral disc
         for idx, x in enumerate(ind_vert[1:-1]):
             axs[index].axvline(df.loc[x, 'Slice (I->S)'], color='black', linestyle='--', alpha=0.5, zorder=0)
-
         # Insert a text label for each vertebral level
         for idx, x in enumerate(ind_vert_mid, 0):
             # Deal with T1 label (C8 -> T1)
@@ -284,10 +292,12 @@ def main():
 
     # Analyse T2w perslice
     filename = os.path.join(input_folder, "t2w_shape_PAM50.csv")
-    df_t2_pam50 = read_t2w_pam50(filename)
+    df_t2_pam50 = read_t2w_pam50(filename, session)
+    get_number_subjects(df_t2_pam50, session)
+
     # Keep only VertLevel from C2 to T1
     df_t2_pam50 = df_t2_pam50[df_t2_pam50['VertLevel'] <= 8]
-    df_t2_pam50 = df_t2_pam50[df_t2_pam50['VertLevel'] > 1]
+   # df_t2_pam50 = df_t2_pam50[df_t2_pam50['VertLevel'] > 1]
     create_lineplot(df_t2_pam50, 'group', output_folder)
     compare_metrics_across_group(df_t2_pam50)
 
@@ -302,7 +312,7 @@ def main():
 
 
     # Load T2star
-    
+
 
 if __name__ == "__main__":
     main()
