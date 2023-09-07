@@ -216,7 +216,7 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_maths -i PAM50_atlas_left_hemi_cord.nii.gz -bin 0.5 -o PAM50_atlas_left_hemi_cord_bin.nii.gz
         
         # Create right and left hemicord masks of T2w
-        python3 $PATH_SCRIPTS/create_right_left_seg_mask.py -seg ${file_t2_seg}.nii.gz -PAM50-R PAM50_atlas_right_hemi_cord_bin.nii.gz -PAM50_L PAM50_atlas_left_hemi_cord_bin.nii.gz
+        python3 $PATH_SCRIPTS/create_right_left_seg_mask.py -seg ${file_t2_seg}.nii.gz -PAM50-R PAM50_atlas_right_hemi_cord_bin.nii.gz -PAM50-L PAM50_atlas_left_hemi_cord_bin.nii.gz
         
         # Compute Right CSA
         # Compute CSA perlevel
