@@ -18,7 +18,63 @@ Analysis pipeline on Cervical Radiculopathy MRI project
 
 ## 2.Dataset
 `MACKEYLAB\Mackeylab\PROJECTS\K23_Cervical_Radiculopathy\data\BIDS\sourcedata`
- 
+The data has the following organization:
+
+~~~
+sourcedata
+│
+├── dataset_description.json
+├── participants.json
+├── participants.tsv
+├── sub-CR001
+├── sub-CR002
+│   │
+│   ├── ses-baselinespinalcord
+│   │
+│   └──  ses-followupspinalcord
+|       ├── anat
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2w.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.json
+│       │  ├── sub-CR002_ses-followupspinalcord_T2star.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-T1w_MTS.json
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-T1w_MTS.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MTon_MTS.json
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MTon_MTS.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_acq-MToff_MTS.json
+│       │  └── sub-CR002_ses-followupspinalcord_acq-MToff_MTS.nii.gz
+|       ├── dwi
+│       │  ├── sub-CR002_ses-followupspinalcord_dwi.nii.gz
+│       │  ├── sub-CR002_ses-followupspinalcord_dwi.json
+│       │  ├── sub-CR002_ses-followupspinalcord_dwi.bvec
+│       │  └── sub-CR002_ses-followupspinalcord_dwi.bval
+│       └── func
+│          ├── sub-CR002_ses-followupspinalcord_task-rest_bold.json
+│          ├── sub-CR002_ses-followupspinalcord_task-rest_bold.nii.gz
+│          └── sub-CR002_ses-followupspinalcord_task-rest_physio.tsv
+derivatives
+    └── labels
+        └── sub-CR002
+             ├── ses-baselinespinalcord
+             │
+             └── ses-followupspinalcord
+                 │
+                 ├── anat
+                 │     ├── sub-CR002_ses-followupspinalcord_T2star_gmseg.nii.gz  <---------- manually-corrected spinal cord gray matter segmentation
+                 │     ├── sub-CR002_ses-followupspinalcord_T2star_gmseg.json  <------------ information about origin of segmentation
+                 │     ├── sub-CR002_ses-followupspinalcord_T2w_seg.nii.gz  <------- manually-corrected spinal cord segmentation
+                 │     ├── sub-CR002_ses-followupspinalcord_T2w_seg.json
+                 │     ├── sub-CR002_ses-followupspinalcord_T2w_labels-disc-manual.nii.gz  <------- manual intervertebral discs labels
+                 │     └── sub-CR002_ses-followupspinalcord_T2w_labels-disc-manual.json
+                 └── func  
+                      ├── sub-CR002_ses-followupspinalcord_task-rest_bold_mc2_mean_seg.nii.gz  <------- manually-corrected spinal cord segmentation
+                      ├── sub-CR002_ses-followupspinalcord_task-rest_bold_mc2_mean_seg.json                      
+                      ├── sub-CR002_ses-followupspinalcord_task-rest_bold_mc2_mean_SC_canal_seg.nii.gz  <---------- manually-corrected spinal canal segmentation
+                      ├── sub-CR002_ses-followupspinalcord_task-rest_bold_mc2_mean_SC_canal_seg.nii.gz  <------------ information about origin of segmentation
+                      ├── sub-CR002_ses-followupspinalcord_task-rest_physio_peak.json  <------- manual cardiac peak detection added to physio file in FSl format
+                      └──sub-CR002_ses-followupspinalcord_task-rest_physio_peak.txt
+~~~
+
 ## 3.Analysis pipeline
 
 ### 3.1.Installation
