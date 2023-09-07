@@ -2,3 +2,7 @@
 - sub-CR0014-ses-baselinespinalcord_task-rest_bold  # No physio file
 - sub-HC005  # Syrinx C7
 - sub-HC027  # Syrinx
+- sub-HC001  # Unmatched
+- sub-HC007  # Left handed & unmatched
+- sub-HC019  # Unmatched
+- sub-HC023  # A lot of movements between scans, unmatched
