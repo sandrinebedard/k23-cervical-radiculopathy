@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# 
+#
 #
 # For usage, type: python create_right_left_seg_mask.py -h
+#
+# Run before:
+# reorient to RPI
+# sct_register_to_template -i sub-CR034_ses-baselinespinalcord_T2w.nii.gz -s sub-CR034_ses-baselinespinalcord_T2w_seg.nii.gz -ldisc sub-CR034_ses-baselinespinalcord_T2w_seg_labeled_discs_1to9.nii.gz -param step=1,type=imseg,algo=centermassrot,metric=MeanSquares,iter=10,smooth=0,gradStep=0.5,slicewise=0,smoothWarpXY=2,pca_eigenratio_th=1.6 -qc ./qc
+#
+# sct_apply_transfo -i sub-CR034_ses-baselinespinalcord_T2w_seg.nii.gz -d anat2template.nii.gz -w warp_anat2template.nii.gz -o sub-CR034_ses-baselinespinalcord_T2w_seg_reg.nii.gz -x nn
+
 
 # Authors: Sandrine Bédard
 
