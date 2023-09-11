@@ -182,7 +182,7 @@ def get_number_subjects(df, session):
     list_session = [subject for subject in list_subject if session in subject]
     nb_subjects_session = len(list_session)
     nb_subject_CR = len([subject for subject in list_session if 'CR' in subject])
-    nb_subject_HC = len([subject for subject in list_session if 'CR' in subject])
+    nb_subject_HC = len([subject for subject in list_session if 'HC' in subject])
     logger.info(f'Total number of subject for {session}: {nb_subjects_session}')
     logger.info(f'With CR = {nb_subject_CR} and HC = {nb_subject_HC}')
 
