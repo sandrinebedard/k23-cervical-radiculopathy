@@ -68,12 +68,12 @@ else
     # Coping labels
     mkdir -p ./label
     rsync -Ravzh $PATH_DATA/./$SUBJECT/func/label/ ./label
-    python3 $PATH_SCRIPTS/create_roi.py -label ./label -levels 4 5 6 7 -thr 0.5 -number-slices 1 -o ./labels/rois
+    python3 $PATH_SCRIPTS/create_roi.py -label $PWD/label -levels 4 5 6 7 -thr 0.5 -number-slices 1 -o ./label/rois
 fi
 
 # Running connectivity analysis
 file_bold_clean=${file}_mc2_pnm_stc
-python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois ./labels/rois -o $PATH_RESULTS/${file_bold_clean}_connectivity.csv
+python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois $PWD/label/rois -o $PATH_RESULTS/${file_bold_clean}_connectivity.csv
 
 # Running connectivity analysis in template space
 file_bold_clean_template=${file}_mc2_pnm_stc2template

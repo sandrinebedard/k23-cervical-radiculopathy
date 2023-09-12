@@ -5,3 +5,4 @@ scipy
 seaborn
 nibabel
 scikit-image
+nilearn
