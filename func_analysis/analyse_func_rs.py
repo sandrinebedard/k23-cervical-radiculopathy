@@ -81,10 +81,10 @@ ROIS_DICT = {
     'PAM50_atlas_31_level_6.nii.gz': 'rv_6',
     'PAM50_atlas_34_level_6.nii.gz': 'ld_6',
     'PAM50_atlas_35_level_6.nii.gz': 'rd_6',
-#    'PAM50_atlas_30_level_7.nii.gz': 'lv_7',
-#    'PAM50_atlas_31_level_7.nii.gz': 'rv_7',
-#    'PAM50_atlas_34_level_7.nii.gz': 'ld_7',
-#    'PAM50_atlas_35_level_7.nii.gz': 'rd_7'
+    'PAM50_atlas_30_level_7.nii.gz': 'lv_7',
+    'PAM50_atlas_31_level_7.nii.gz': 'rv_7',
+    'PAM50_atlas_34_level_7.nii.gz': 'ld_7',
+    'PAM50_atlas_35_level_7.nii.gz': 'rd_7'
 }
 
 
