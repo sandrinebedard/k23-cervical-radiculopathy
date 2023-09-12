@@ -62,12 +62,12 @@ echo "Looking for rois: $path_rois"
 if [[ -e $path_rois ]]; then
     echo "Found! Using existing rois"
     mkdir -p ./label/rois
-    rsync -Ravzh $path_rois ./label/rois
+    rsync -avzh $path_rois/ ./label/rois
 else
     echo "No existing rois found. Running roi creation"
     # Coping labels
     mkdir -p ./label
-    rsync -Ravzh $PATH_DATA/./$SUBJECT/func/label/* ./label/
+    rsync -avzh $PATH_DATA/./$SUBJECT/func/label/ ./label/
     python3 $PATH_SCRIPTS/create_roi.py -label $PWD/label -levels 4 5 6 7 -thr 0.5 -number-slices 1 -o ./label/rois
 fi
 
