@@ -77,7 +77,7 @@ python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois
 
 # Running connectivity analysis in template space
 file_bold_clean_template=${file}_task-rest_bold_mc2_pnm_stc2template
-python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois $PATH_DERIVATIVES/PAM50/func/rois -o $PATH_RESULTS/${file_bold_clean_template}_connectivity.csv
+python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean_template}.nii.gz -path-rois $PATH_DERIVATIVES/PAM50/func/rois -o $PATH_RESULTS/${file_bold_clean_template}_connectivity.csv
 
 
 
