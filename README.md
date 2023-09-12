@@ -146,7 +146,14 @@ Run the following command:
 ~~~
 
 
-## Statistical analysis
+## Analysis
+### Analyse anatomical data
 ~~~
 python analyse_anatomical.py -i-folder /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/test_csa_2023-08-29-v3/results/ -session baseline -o-folder /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/results_2023-08-29
+~~~
+### Analyse functional data
+
+~~~
+cd func_analysis
+sct_run_batch -path-data <DATA_PROCESSED> -path-out <PATH-OUT> -script run_subject_level_rs_conn.sh -script-args <PATH_DERIVATIVES> -jobs 10
 ~~~
