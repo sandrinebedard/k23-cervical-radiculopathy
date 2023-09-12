@@ -67,7 +67,7 @@ else
     echo "No existing rois found. Running roi creation"
     # Coping labels
     mkdir -p ./label
-    rsync -Ravzh $PATH_DATA/./$SUBJECT/func/label/ ./label
+    rsync -Ravzh $PATH_DATA/./$SUBJECT/func/label/* ./label/
     python3 $PATH_SCRIPTS/create_roi.py -label $PWD/label -levels 4 5 6 7 -thr 0.5 -number-slices 1 -o ./label/rois
 fi
 
