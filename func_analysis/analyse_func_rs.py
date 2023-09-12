@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import nilearn
 import nibabel as nib
+import matplotlib.pyplot as plt
 from nilearn.maskers import NiftiLabelsMasker
 from nilearn.connectome import ConnectivityMeasure
 from nilearn import plotting
@@ -80,10 +81,10 @@ ROIS_DICT = {
     'PAM50_atlas_31_level_6.nii.gz': 'rv_6',
     'PAM50_atlas_34_level_6.nii.gz': 'ld_6',
     'PAM50_atlas_35_level_6.nii.gz': 'rd_6',
-    'PAM50_atlas_30_level_7.nii.gz': 'lv_7',
-    'PAM50_atlas_31_level_7.nii.gz': 'rv_7',
-    'PAM50_atlas_34_level_7.nii.gz': 'ld_7',
-    'PAM50_atlas_35_level_7.nii.gz': 'rd_7'
+#    'PAM50_atlas_30_level_7.nii.gz': 'lv_7',
+#    'PAM50_atlas_31_level_7.nii.gz': 'rv_7',
+#    'PAM50_atlas_34_level_7.nii.gz': 'ld_7',
+#    'PAM50_atlas_35_level_7.nii.gz': 'rd_7'
 }
 
 
@@ -138,17 +139,16 @@ def main():
     # matrices are ordered for block-like representation
     print(labels)
     print(correlation_matrix)
-    plotting.plot_matrix(
+    display = plotting.plot_matrix(
         correlation_matrix,
         figure=(10, 8),
         labels=labels,
 #        vmax=0.8,
 #        vmin=-0.8,
-        title="Correlation",
         reorder=False,
     )
     nilearn.plotting.show()
-
+    display.figure.savefig(fname_out.split('.')[0] + '.png',dpi=300,)
     # Save correlation matrix
     np.savetxt(fname_out, correlation_matrix, delimiter=",")
 
