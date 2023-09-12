@@ -72,11 +72,11 @@ else
 fi
 
 # Running connectivity analysis
-file_bold_clean=${file}_mc2_pnm_stc
+file_bold_clean=${file}_task-rest_bold_mc2_pnm_stc
 python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois $PWD/label/rois -o $PATH_RESULTS/${file_bold_clean}_connectivity.csv
 
 # Running connectivity analysis in template space
-file_bold_clean_template=${file}_mc2_pnm_stc2template
+file_bold_clean_template=${file}_task-rest_bold_mc2_pnm_stc2template
 python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois $PATH_DERIVATIVES/PAM50/func/rois -o $PATH_RESULTS/${file_bold_clean_template}_connectivity.csv
 
 
