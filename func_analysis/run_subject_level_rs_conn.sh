@@ -68,7 +68,7 @@ else
     # Coping labels
     mkdir -p ./label
     rsync -avzh $PATH_DATA/./$SUBJECT/func/label/ ./label/
-    python3 $PATH_SCRIPTS/create_roi.py -label $PWD/label -levels 5 6 7 -thr 0.5 -number-slices 1 -o ./label/rois
+    python3 $PATH_SCRIPTS/create_roi.py -label $PWD/label -levels 5 6 7 -thr 0.9 -number-slices 1 -o ./label/rois
     mkdir -p $PATH_DATA_PROCESSED/derivatives/labels/${SUBJECT}/func/
 fi
 
@@ -78,7 +78,7 @@ python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean}.nii.gz -path-rois
 
 # Running connectivity analysis in template space
 file_bold_clean_template=${file}_task-rest_bold_mc2_pnm_stc2template
-python3 $PATH_SCRIPTS/analyse_func_rs.py -i ${file_bold_clean_template}.nii.gz -path-rois $PATH_DERIVATIVES/PAM50/func/rois -o $PATH_RESULTS/${file_bold_clean_template}_connectivity.csv
+python3 $PATH_SCRIPTS/analyse_func_rs_subject.py -i ${file_bold_clean_template}.nii.gz -path-rois $PATH_DERIVATIVES/PAM50/func/rois -o $PATH_RESULTS/${file_bold_clean_template}_connectivity.csv
 
 
 

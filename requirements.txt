@@ -6,3 +6,4 @@ seaborn
 nibabel
 scikit-image
 nilearn
+pyyaml
