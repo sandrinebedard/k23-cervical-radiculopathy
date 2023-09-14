@@ -69,10 +69,10 @@ def get_parser():
 
 
 ROIS_DICT = {
-    'PAM50_atlas_30_level_4.nii.gz': 'lv_4',
-    'PAM50_atlas_31_level_4.nii.gz': 'rv_4',
-    'PAM50_atlas_34_level_4.nii.gz': 'ld_4',
-    'PAM50_atlas_35_level_4.nii.gz': 'rd_4',
+#    'PAM50_atlas_30_level_4.nii.gz': 'lv_4',
+#    'PAM50_atlas_31_level_4.nii.gz': 'rv_4',
+#    'PAM50_atlas_34_level_4.nii.gz': 'ld_4',
+#    'PAM50_atlas_35_level_4.nii.gz': 'rd_4',
     'PAM50_atlas_30_level_5.nii.gz': 'lv_5',
     'PAM50_atlas_31_level_5.nii.gz': 'rv_5',
     'PAM50_atlas_34_level_5.nii.gz': 'ld_5',
