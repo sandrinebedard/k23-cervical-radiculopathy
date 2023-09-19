@@ -494,12 +494,12 @@ if [[ $SES == *"spinalcord"* ]];then
         # Left dorsal column
         sct_extract_metric -i dti_FA.nii.gz -l 0,2 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_dorsalcolumn_left.csv
         # dorsal column
-        sct_extract_metric -i dti_FA.nii.gz -l 53 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_dorsalcolumn.csv
+        sct_extract_metric -i dti_FA.nii.gz -l 53 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_dorsalcolumn.csv
 
         # Right spinal lemniscus
-        sct_extract_metric -i dti_FA.nii.gz -l 13 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_lemniscus_right.csv
+        sct_extract_metric -i dti_FA.nii.gz -l 13 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_lemniscus_right.csv
         # Left spinal lemniscus
-        sct_extract_metric -i dti_FA.nii.gz -l 12 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_lemniscus_left.csv
+        sct_extract_metric -i dti_FA.nii.gz -l 12 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_lemniscus_left.csv
         # spinal lemniscus
         sct_extract_metric -i dti_FA.nii.gz -l 12,13 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_lemniscus.csv
 
@@ -540,7 +540,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Left dorsal column
         sct_extract_metric -i dti_RD.nii.gz -l 0,2 -combine 1 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/rd_in_dorsalcolumn_left.csv
         # dorsal column
-        sct_extract_metric -i dti_RD.nii.gz -l 53  -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/rd_in_dorsalcolumn.csv
+        sct_extract_metric -i dti_RD.nii.gz -l 53 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/rd_in_dorsalcolumn.csv
 
         # Right spinal lemniscus
         sct_extract_metric -i dti_RD.nii.gz -l 13 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/rd_in_lemniscus_right.csv
@@ -551,7 +551,7 @@ if [[ $SES == *"spinalcord"* ]];then
 
         # ALL WM
         ####################
-        # TODO: add right left, remove perlevel for all
+        # TODO: add right left
         sct_extract_metric -i dti_FA.nii.gz -l 51 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/fa_in_wm.csv
         sct_extract_metric -i dti_MD.nii.gz -l 51 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/md_in_wm.csv
         sct_extract_metric -i dti_RD.nii.gz -l 51 -vert 3:6 -method map -f label/atlas -vertfile label/template/PAM50_levels.nii.gz -append 1 -o $PATH_RESULTS/dwi/rd_in_wm.csv
