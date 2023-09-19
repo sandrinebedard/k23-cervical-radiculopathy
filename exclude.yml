@@ -1,5 +1,7 @@
-- sub-CR008_ses-followupspinalcord_task-rest_bold  # No physio data since hit SAR
-- sub-CR0014-ses-baselinespinalcord_task-rest_bold  # No physio file
+- sub-CR008  #_ses-followupspinalcord_task-rest_bold  # No physio data since hit SAR
+- sub-HC011  # matched to sub-CR008
+- sub-CR014  #-ses-baselinespinalcord_task-rest_bold  # No physio file
+- sub-HC028  # matched to CR014
 - sub-HC005  # Syrinx C7
 - sub-HC027  # Syrinx
 - sub-HC001  # Unmatched
