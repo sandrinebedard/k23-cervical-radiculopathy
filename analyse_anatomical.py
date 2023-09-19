@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 import scipy.stats as stats
+import yaml
 
 FNAME_LOG = 'log_stats.txt'
 
@@ -112,7 +113,7 @@ def format_pvalue(p_value, alpha=0.001, decimal_places=3, include_space=True, in
     return p_value
 
 
-def compare_metrics_across_group(df, perlevel=False):
+def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
     """
     Compute Wilcoxon rank-sum tests between males and females for each metric.
     """
@@ -121,11 +122,16 @@ def compare_metrics_across_group(df, perlevel=False):
 
     for metric in METRICS:
         print(f"\n{metric}")
+        
         if perlevel:
-            slices_HC = df[df['group'] == 'HC'].groupby(['VertLevel'])#[metric].mean()
+            slices_HC = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].mean()
+            slices_HC_STD = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].std()
             slices_CR = df[df['group'] == 'CR'].groupby(['VertLevel'])[metric].mean()
+            slices_CR_STD = df[df['group'] == 'CR'].groupby(['VertLevel'])[metric].std()
             logger.info(f'Mean {metric} for HC: {slices_HC}')
+            logger.info(f'STD {metric} for HC: {slices_HC_STD}')
             logger.info(f'Mean {metric} for CR: {slices_CR}')
+            logger.info(f'STD {metric} for CR: {slices_CR_STD}')
         else:
 
             # Get mean values for each slice
@@ -140,7 +146,8 @@ def compare_metrics_across_group(df, perlevel=False):
         # Run Wilcoxon rank-sum test (groups are independent)
         stat, pval = stats.ranksums(x=slices_HC, y=slices_CR)
         print(f'{metric}: Wilcoxon rank-sum test between HC and CR: p-value{format_pvalue(pval)}')
-
+        if metric_chosen:
+           break
 
 def get_vert_indices(df):
     """
@@ -166,28 +173,38 @@ def get_vert_indices(df):
     return vert, ind_vert, ind_vert_mid
 
 
-def read_t2w_pam50(fname, session=None, exclude_list=None):
+def read_t2w_pam50(fname, suffix='_T2w_seg.nii.gz', session=None, exclude_list=None):
     data = pd.read_csv(fname)
     # Filter with session first
-    data['participant_id'] = (data['Filename'].str.split('/').str[-1]).str.replace('_T2w_seg.nii.gz', '')
+    data['participant_id'] = (data['Filename'].str.split('/').str[-1]).str.replace(suffix, '')
     data['session'] = data['participant_id'].str.split('_').str[-1]
     data['group'] = data['participant_id'].str.split('_').str[-2].str.split('-').str[-1].str[0:2]
-    print('Subjects', np.unique(data['participant_id'].to_list()))
+    #print('Subjects', np.unique(data['participant_id'].to_list()))
+    # Drop subjects with id
+    if exclude_list:
+        for subject in exclude_list:
+            sub = (subject+'_'+ session)
+            logger.info(f'dropping {sub}')
+            data = data.drop(data[data['participant_id'] == sub].index, axis=0)
+
     return data.loc[data['session'] == session]
 
 
 def get_number_subjects(df, session):
-    
+
     list_subject = np.unique(df['participant_id'].to_list())
     list_session = [subject for subject in list_subject if session in subject]
     nb_subjects_session = len(list_session)
     nb_subject_CR = len([subject for subject in list_session if 'CR' in subject])
+   # print([subject for subject in list_session if 'CR' in subject])
+
     nb_subject_HC = len([subject for subject in list_session if 'HC' in subject])
+   # print([subject for subject in list_session if 'HC' in subject])
     logger.info(f'Total number of subject for {session}: {nb_subjects_session}')
     logger.info(f'With CR = {nb_subject_CR} and HC = {nb_subject_HC}')
 
 
-def create_lineplot(df, hue, path_out):
+def create_lineplot(df, hue, path_out, filename=None):
     """
     Create lineplot for individual metrics per vertebral levels.
     Note: we are ploting slices not levels to avoid averaging across levels.
@@ -274,6 +291,23 @@ def main():
         exclude_list = args.exclude_list
     else: 
         exclude_list = None
+
+        # Create a list with subjects to exclude if input .yml config file is passed
+    if args.exclude_list is not None:
+        # Check if input yml file exists
+        if os.path.isfile(args.exclude_list):
+            fname_yml = args.exclude_list
+        else:
+            sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(args.exclude))
+        with open(fname_yml, 'r') as stream:
+            try:
+                exclude = list(yaml.safe_load(stream))
+            except yaml.YAMLError as exc:
+                logger.error(exc)
+    else:
+        exclude = []
+    print(exclude)
+
     session = args.session
     output_folder = args.o_folder
     # Create output folder if does not exist.
@@ -291,8 +325,9 @@ def main():
     # TODO: Create an exlclude list
 
     # Analyse T2w perslice
+    logger.info('\nAnalysing T2w CSA perslice in PAM50 anatomical dimension')
     filename = os.path.join(input_folder, "t2w_shape_PAM50.csv")
-    df_t2_pam50 = read_t2w_pam50(filename, session)
+    df_t2_pam50 = read_t2w_pam50(filename, session=session, exclude_list=exclude)
     get_number_subjects(df_t2_pam50, session)
 
     # Keep only VertLevel from C2 to T1
@@ -302,16 +337,44 @@ def main():
     compare_metrics_across_group(df_t2_pam50)
 
     # Load T2w perlevel
-    # filename = os.path.join(input_folder, "t2w_shape_perlevel.csv")
-    # df_t2_perlevel = read_t2w_pam50(filename)
+    logger.info('\nAnalysing T2w CSA perlevel')
+    filename = os.path.join(input_folder, "t2w_shape_perlevel.csv")
+    df_t2_perlevel = read_t2w_pam50(filename, session=session, exclude_list=exclude)
     # # Keep only VertLevel from C2 to T1
-    # df_t2_perlevel = df_t2_perlevel[df_t2_perlevel['VertLevel'] <= 8]
-    # df_t2_perlevel = df_t2_perlevel[df_t2_perlevel['VertLevel'] > 1]
-    # print(df_t2_perlevel)
-    # compare_metrics_across_group(df_t2_perlevel, perlevel=True)
-
+    df_t2_perlevel = df_t2_perlevel[df_t2_perlevel['VertLevel'] <= 8]
+    df_t2_perlevel = df_t2_perlevel[df_t2_perlevel['VertLevel'] > 1]
+    compare_metrics_across_group(df_t2_perlevel, perlevel=True)
 
     # Load T2star
+    logger.info('\nAnalysing GM CSA')
+    filename = os.path.join(input_folder, "t2star_gm_csa.csv")
+    df_t2star_gm = read_t2w_pam50(filename, suffix='_T2star_gmseg.nii.gz', session=session, exclude_list=exclude)
+    df_t2star_gm = df_t2_perlevel[df_t2_perlevel['VertLevel'] <= 6]  # Values chosen following the coverage 
+    df_t2star_gm = df_t2_perlevel[df_t2_perlevel['VertLevel'] > 2]  # Values chosen following the coverage 
+    compare_metrics_across_group(df_t2star_gm, perlevel=True, metric_chosen=True)
+
+
+# Test perslice CSA
+
+    # Analyse T2w perslice
+    logger.info('\nAnalysing T2w CSA right perslice in PAM50 anatomical dimension')
+    filename = os.path.join(input_folder, "t2w_shape_right_PAM50.csv")
+    df_t2_pam50_right = read_t2w_pam50(filename, suffix='_T2w_seg_right.nii.gz', session=session, exclude_list=exclude)
+    get_number_subjects(df_t2_pam50_right, session)
+
+    # Keep only VertLevel from C2 to T1
+    df_t2_pam50_right = df_t2_pam50_right[df_t2_pam50_right['VertLevel'] <= 8]
+    compare_metrics_across_group(df_t2_pam50_right)
+
+
+    # Load T2w perlevel
+    logger.info('\nAnalysing T2w CSA right perlevel')
+    filename = os.path.join(input_folder, "t2w_shape_right_perlevel.csv")
+    df_t2_right_perlevel = read_t2w_pam50(filename, suffix='_T2w_seg_right.nii.gz', session=session, exclude_list=exclude)
+    df_t2_right_perlevel = df_t2_right_perlevel[df_t2_right_perlevel['VertLevel'] <= 8]
+    df_t2_right_perlevel = df_t2_right_perlevel[df_t2_right_perlevel['VertLevel'] > 1]
+    compare_metrics_across_group(df_t2_right_perlevel, perlevel=True, metric_chosen=True)
+
 
 
 if __name__ == "__main__":
