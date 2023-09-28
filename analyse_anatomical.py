@@ -34,7 +34,7 @@ METRICS = ['MEAN(area)', 'MEAN(diameter_AP)', 'MEAN(diameter_RL)', 'MEAN(eccentr
 METRICS_TO_YLIM = {
     'MEAN(diameter_AP)': (4, 9.3),
     'MEAN(area)': (30, 95),
-    'MEAN(diameter_RL)': (8.5, 14.5),
+    'MEAN(diameter_RL)': (8.5, 16),
     'MEAN(eccentricity)': (0.6, 0.95),
     'MEAN(solidity)': (0.912, 0.999),
 }
@@ -51,7 +51,7 @@ METRIC_TO_AXIS = {
 
 PALETTE = {
     'sex': {'M': 'blue', 'F': 'red'},
-    'group': {'HC': 'green', 'CR': 'blue'}
+    'group': {'HC': 'blue', 'CR': '#e31a1c'}
     }
 
 LABELS_FONT_SIZE = 14
@@ -118,7 +118,7 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
     Compute Wilcoxon rank-sum tests between males and females for each metric.
     """
 
-    print("")
+    logger.info("")
 
     for metric in METRICS:
         print(f"\n{metric}")
@@ -140,14 +140,15 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
 
         # Run normality test
         stat, pval = stats.shapiro(slices_HC)
-        print(f'Normality test HC: p-value{format_pvalue(pval)}')
+        logger.info(f'Normality test HC: p-value{format_pvalue(pval)}')
         stat, pval = stats.shapiro(slices_CR)
-        print(f'Normality test CR: p-value{format_pvalue(pval)}')
+        logger.info(f'Normality test CR: p-value{format_pvalue(pval)}')
         # Run Wilcoxon rank-sum test (groups are independent)
         stat, pval = stats.ranksums(x=slices_HC, y=slices_CR)
-        print(f'{metric}: Wilcoxon rank-sum test between HC and CR: p-value{format_pvalue(pval)}')
+        logger.info(f'{metric}: Wilcoxon rank-sum test between HC and CR: p-value{format_pvalue(pval)}')
         if metric_chosen:
            break
+
 
 def get_vert_indices(df):
     """
@@ -278,7 +279,7 @@ def create_lineplot(df, hue, path_out, filename=None):
     else:
         filename = 'lineplot.png'
     path_filename = os.path.join(path_out, filename)
-    plt.savefig(path_filename, dpi=300, bbox_inches='tight')
+    plt.savefig(path_filename, dpi=500, bbox_inches='tight')
     print('Figure saved: ' + path_filename)
 
 
@@ -354,7 +355,7 @@ def main():
     compare_metrics_across_group(df_t2star_gm, perlevel=True, metric_chosen=True)
 
 
-# Test perslice CSA
+# Test perslice  right vs left CSA
 
     # Analyse T2w perslice
     logger.info('\nAnalysing T2w CSA right perslice in PAM50 anatomical dimension')
@@ -375,7 +376,50 @@ def main():
     df_t2_right_perlevel = df_t2_right_perlevel[df_t2_right_perlevel['VertLevel'] > 1]
     compare_metrics_across_group(df_t2_right_perlevel, perlevel=True, metric_chosen=True)
 
+    # Analyse T2w perslice
+    logger.info('\nAnalysing T2w CSA Left perslice in PAM50 anatomical dimension')
+    filename = os.path.join(input_folder, "t2w_shape_left_PAM50.csv")
+    df_t2_pam50_left = read_t2w_pam50(filename, suffix='_T2w_seg_left.nii.gz', session=session, exclude_list=exclude)
+    get_number_subjects(df_t2_pam50_left, session)
 
+    # Keep only VertLevel from C2 to T1
+    df_t2_pam50_left = df_t2_pam50_left[df_t2_pam50_left['VertLevel'] <= 8]
+    compare_metrics_across_group(df_t2_pam50_left)
+
+    # Load T2w perlevel
+    logger.info('\nAnalysing T2w CSA left perlevel')
+    filename = os.path.join(input_folder, "t2w_shape_left_perlevel.csv")
+    df_t2_left_perlevel = read_t2w_pam50(filename, suffix='_T2w_seg_left.nii.gz', session=session, exclude_list=exclude)
+    df_t2_left_perlevel = df_t2_left_perlevel[df_t2_left_perlevel['VertLevel'] <= 8]
+    df_t2_left_perlevel = df_t2_left_perlevel[df_t2_left_perlevel['VertLevel'] > 1]
+    compare_metrics_across_group(df_t2_left_perlevel, perlevel=True, metric_chosen=True)
+
+
+# Compute test between R-L CSA
+    # HC
+    # Get mean values for participant
+    participants_HC_R = df_t2_pam50_right[df_t2_pam50_right['group'] == 'HC'].groupby(['participant_id'])['MEAN(area)'].mean()
+    participants_HC_L = df_t2_pam50_left[df_t2_pam50_left['group'] == 'HC'].groupby(['participant_id'])['MEAN(area)'].mean()
+    # Run normality test
+    stat, pval = stats.shapiro(participants_HC_R)
+    logger.info(f'Normality test HC Right: p-value{format_pvalue(pval)}')
+    stat, pval = stats.shapiro(participants_HC_L)
+    logger.info(f'Normality test HC Left: p-value{format_pvalue(pval)}')
+
+    ttest, pval = stats.wilcoxon(participants_HC_R, participants_HC_L)
+    logger.info(f'MEAN(area): Wilcoxon signed-rank test between Right and left for HC: p-value{format_pvalue(pval)}')
+    # CR
+    participants_CR_R = df_t2_pam50_right[df_t2_pam50_right['group'] == 'CR'].groupby(['participant_id'])['MEAN(area)'].mean()
+    participants_CR_L = df_t2_pam50_left[df_t2_pam50_left['group'] == 'CR'].groupby(['participant_id'])['MEAN(area)'].mean()
+    # Run normality test
+    stat, pval = stats.shapiro(participants_HC_R)
+    logger.info(f'Normality test HC Right: p-value{format_pvalue(pval)}')
+    stat, pval = stats.shapiro(participants_HC_L)
+    logger.info(f'Normality test HC Left: p-value{format_pvalue(pval)}')
+
+    ttest, pval = stats.wilcoxon(participants_CR_R, participants_CR_L)
+    print(ttest, pval)
+    logger.info(f'MEAN(area): Wilcoxon signed-rank test between Right and left for CR: p-value{format_pvalue(pval)}')
 
 if __name__ == "__main__":
     main()
