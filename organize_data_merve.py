@@ -157,10 +157,10 @@ def main():
                 suffix = subject.split('-')[1]
                 fname_old_bold_moco_image = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2.nii.gz')
                 fname_old_bold_moco_json = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold.json')
-                fname_old_bold_moco_mean = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mean.nii.gz')
-                fname_old_bold_moco_mean_seg = os.path.join(subject_path_derivatives, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mean_seg.nii.gz')
+                fname_old_bold_moco_mean = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2_mean.nii.gz')
+                fname_old_bold_moco_mean_seg = os.path.join(subject_path_derivatives, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2_mean_seg.nii.gz')
                 if not os.path.exists(fname_old_bold_moco_mean_seg):
-                    fname_old_bold_moco_mean_seg = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mean_seg.nii.gz')
+                    fname_old_bold_moco_mean_seg = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mean_mc2_seg.nii.gz')
 
                 # Create new subject name
                 subject_new = 'sub-' + DATASET_NAME_SHORT + suffix
@@ -180,7 +180,7 @@ def main():
                 shutil.copyfile(fname_old_bold_moco_json, fname_new_bold_moco_json)
                 fname_new_bold_moco_mean = os.path.join(path_out_subject_moco, subject_new + '_task-rest_desc-mocomean_bold.nii.gz')
                 shutil.copyfile(fname_old_bold_moco_mean, fname_new_bold_moco_mean)
-                fname_new_bold_moco_mean_seg = os.path.join(path_out_subject_labels, subject_new + '_task-rest_desc-desc-spinalcord_mask.nii.gz')
+                fname_new_bold_moco_mean_seg = os.path.join(path_out_subject_labels, subject_new + '_task-rest_desc-spinalcord_mask.nii.gz')
                 shutil.copyfile(fname_old_bold_moco_mean_seg, fname_new_bold_moco_mean_seg)
 
 
