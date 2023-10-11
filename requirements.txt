@@ -7,3 +7,4 @@ nibabel
 scikit-image
 nilearn
 pyyaml
+statsmodels

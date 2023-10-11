@@ -122,7 +122,7 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
 
     for metric in METRICS:
         print(f"\n{metric}")
-        
+
         if perlevel:
             slices_HC = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].mean()
             slices_HC_STD = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].std()
@@ -144,7 +144,10 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
         stat, pval = stats.shapiro(slices_CR)
         logger.info(f'Normality test CR: p-value{format_pvalue(pval)}')
         # Run Wilcoxon rank-sum test (groups are independent)
+        from statsmodels.sandbox.stats.multicomp import multipletests
         stat, pval = stats.ranksums(x=slices_HC, y=slices_CR)
+        #p_adjusted = multipletests(pval, method='bonferroni')
+        #print(p_adjusted)
         logger.info(f'{metric}: Wilcoxon rank-sum test between HC and CR: p-value{format_pvalue(pval)}')
         if metric_chosen:
            break
@@ -350,8 +353,8 @@ def main():
     logger.info('\nAnalysing GM CSA')
     filename = os.path.join(input_folder, "t2star_gm_csa.csv")
     df_t2star_gm = read_t2w_pam50(filename, suffix='_T2star_gmseg.nii.gz', session=session, exclude_list=exclude)
-    df_t2star_gm = df_t2_perlevel[df_t2_perlevel['VertLevel'] <= 6]  # Values chosen following the coverage 
-    df_t2star_gm = df_t2_perlevel[df_t2_perlevel['VertLevel'] > 2]  # Values chosen following the coverage 
+    df_t2star_gm = df_t2star_gm[df_t2star_gm['VertLevel'] <= 6]  # Values chosen following the coverage 
+    df_t2star_gm = df_t2star_gm[df_t2star_gm['VertLevel'] > 2]  # Values chosen following the coverage 
     compare_metrics_across_group(df_t2star_gm, perlevel=True, metric_chosen=True)
 
 
@@ -418,7 +421,6 @@ def main():
     logger.info(f'Normality test HC Left: p-value{format_pvalue(pval)}')
 
     ttest, pval = stats.wilcoxon(participants_CR_R, participants_CR_L)
-    print(ttest, pval)
     logger.info(f'MEAN(area): Wilcoxon signed-rank test between Right and left for CR: p-value{format_pvalue(pval)}')
 
 if __name__ == "__main__":
