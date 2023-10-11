@@ -218,6 +218,10 @@ if [[ $SES == *"spinalcord"* ]];then
         # Create right and left hemicord masks of T2w
         python3 $PATH_SCRIPTS/create_right_left_seg_mask.py -seg ${file_t2_seg}.nii.gz -PAM50-R PAM50_atlas_right_hemi_cord_bin.nii.gz -PAM50-L PAM50_atlas_left_hemi_cord_bin.nii.gz
         
+        # QC report 
+        sct_qc -i ${file_t2w}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_t2_seg}_right.nii.gz -qc-subject ${SUBJECT}
+        sct_qc -i ${file_t2w}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_t2_seg}_left.nii.gz -qc-subject ${SUBJECT}
+
         # Compute Right CSA
         # Compute CSA perlevel
         sct_process_segmentation -i ${file_t2_seg}_right.nii.gz -vertfile ${file_t2_labels}.nii.gz -vert 2:8 -perlevel 1 -o ${PATH_RESULTS}/t2w_shape_right_perlevel.csv -append 1
