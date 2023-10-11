@@ -160,7 +160,7 @@ def main():
                 fname_old_bold_moco_mean = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2_mean.nii.gz')
                 fname_old_bold_moco_mean_seg = os.path.join(subject_path_derivatives, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2_mean_seg.nii.gz')
                 if not os.path.exists(fname_old_bold_moco_mean_seg):
-                    fname_old_bold_moco_mean_seg = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mean_mc2_seg.nii.gz')
+                    fname_old_bold_moco_mean_seg = os.path.join(subject_path, 'ses-baselinespinalcord', 'func', subject + '_ses-baselinespinalcord_task-rest_bold_mc2_mean_seg.nii.gz')
 
                 # Create new subject name
                 subject_new = 'sub-' + DATASET_NAME_SHORT + suffix
