@@ -4,7 +4,7 @@
 - sub-HC007  # Left handed & unmatched
 - sub-HC019  # Unmatched
 - sub-HC023  # A lot of movements between scans, unmatched
-- sub-CR034  # TO REMOVE matched is comin sept 29
+#- sub-CR034  # TO REMOVE matched is comin sept 29
 
 # DWI
 # sub-CR003_ses-baselinespinalcord_dwi_moco_dwi_mean.nii.gz
