@@ -33,6 +33,10 @@ def get_parser():
                         required=True,
                         type=str,
                         help="Input path with connectivity matrix")
+    parser.add_argument("-path-out",
+                        required=True,
+                        type=str,
+                        help="Path to save results")
     parser.add_argument("-exclude",
                         required=False,
                         type=str,
@@ -61,14 +65,14 @@ def read_csv(path_results, template, exclude):
     for file in list_HC:
         subject = file.split('_')[0]
         if subject not in exclude:
-            df = pd.read_csv(os.path.join(path_results, file), header=None)
+            df = pd.read_csv(os.path.join(path_results, file), header=None, names=LABELS)
             # Apply Fisher transform
             df_F = df.apply(np.arctanh, axis=0)
             list_corr_HC.append(df_F)
     for file in list_CR:
         subject = file.split('_')[0]
         if subject not in exclude:
-            df = pd.read_csv(os.path.join(path_results, file), header=None)
+            df = pd.read_csv(os.path.join(path_results, file), header=None, names=LABELS)
             # Apply Fisher transform
             df_F = df.apply(np.arctanh, axis=0)
             list_corr_CR.append(df_F)
@@ -83,9 +87,12 @@ LABELS = ['LV_5', 'RV_5', 'LD_5', 'RD_5',
           'LV_7', 'RV_7', 'LD_7', 'RD_7']
 
 
-def generate_corr_plot(df_mean, group, vmin=-0.02, vmax=0.06):
+LABELS_grouped = ['LV', 'RV', 'LD', 'RD']
+
+
+def generate_corr_plot(df_mean, group, labels,  vmin=None, vmax=None, fname=None):  # vmin=-0.02, vmax=0.06
     sns.set_theme(style="white")
-    plt.figure()
+    plt.figure(figsize=(10,7))
     # find the largest number in mean while discounting Inf, useful for plot colourbars later on
     print(np.nanmax(df_mean[df_mean != np.inf]))
     # find the smallest number in mean while discounting -Inf, useful for plot colourbars later on
@@ -93,12 +100,15 @@ def generate_corr_plot(df_mean, group, vmin=-0.02, vmax=0.06):
 
     mask = np.triu(np.ones_like(df_mean, dtype=bool))
     # draw a heatmap with the mask and correct aspect ratio
-
     sns.heatmap(df_mean, mask=mask, cmap=sns.diverging_palette(220, 20, as_cmap=True), vmax=vmax, vmin=vmin, center=0.0,
-                square=True, linewidths=.5, xticklabels=LABELS, yticklabels=LABELS, cbar_kws={"shrink": .6, "label": "Z-transformed Pearson R"}, fmt='').set(xlabel="Seed Region", ylabel="Seed Region")
+                square=True, linewidths=.5, xticklabels=labels, yticklabels=labels, 
+                annot=True, fmt=".2f",
+                cbar_kws={"shrink": .6, "label": "Z-transformed Pearson R"}).set(xlabel="Seed Region", ylabel="Seed Region")
     plt.title(f'Connecivity {group}')
     plt.yticks(rotation=0)
     plt.xticks(rotation=90)
+    plt.savefig(fname+ '.png',dpi=300,)
+
  
 
 def compute_t_test(df):
@@ -131,6 +141,11 @@ def main():
     # Get input argments
     path_results = args.i_folder
     template = args.template
+    output_folder = args.path_out
+    # Create output folder if does not exist.
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    os.chdir(output_folder)
 
     # Create a list with subjects to exclude if input .yml config file is passed
     if args.exclude is not None:
@@ -148,15 +163,68 @@ def main():
         exclude = []
     #print(exclude)
     df_HC, df_CR = read_csv(path_results, template, exclude)
+
+    # FOR HC
+    ##########################
+   # print(df_HC)  # TODO: save in csv file
     df_HC_row = df_HC.groupby(df_HC.index)
     df_HC_mean = df_HC_row.mean()  # calculate mean across subjects for each connection
+    print(df_HC_mean)
+    np.savetxt('corr_matrix_all_HC_perlevel.csv', df_HC_mean, delimiter=",")
+
+    # Compute mean across all levels
+    df_HC_mean_levels = pd.DataFrame()
+    df_HC_mean_levels['LV'] = df_HC_mean[['LV_5', 'LV_6', 'LV_7']].mean(axis=1) #.iloc[[0,4,8]]
+    df_HC_mean_levels['RV'] = df_HC_mean[['RV_5', 'RV_6', 'RV_7']].mean(axis=1)#.iloc[[1,5,9]]
+    df_HC_mean_levels['RD'] = df_HC_mean[['RD_5', 'RD_6', 'RD_7']].mean(axis=1) #.iloc[[2,6,10]]
+    df_HC_mean_levels['LD'] = df_HC_mean[['LD_5', 'LD_6', 'LD_7']].mean(axis=1)#.iloc[[3,7,11]]
+    df_HC_mean_levels.iloc[[0]] = df_HC_mean_levels.iloc[[0,4,8]].mean()
+    df_HC_mean_levels.iloc[[1]] = df_HC_mean_levels.iloc[[1,5,9]].mean()
+    df_HC_mean_levels.iloc[[2]] = df_HC_mean_levels.iloc[[2,6,10]].mean()
+    df_HC_mean_levels.iloc[[3]] = df_HC_mean_levels.iloc[[3,7,11]].mean()
+    df_HC_mean_levels = df_HC_mean_levels[0:4]
+    #df_HC_mean_levels_combined = df_HC_mean_levels.groupby(df_HC_mean_levels.index).mean()
+    print(df_HC_mean_levels)
+    np.savetxt('corr_matrix_all_HC.csv', df_HC_mean_levels, delimiter=",")
+
+
     # Get p-value
-    compute_t_test(df_HC_row)
-    generate_corr_plot(df_HC_mean, group='HC')
+    #compute_t_test(df_HC_row)
+    # Corr plot for seperate level
+    generate_corr_plot(df_HC_mean, group='HC', labels=LABELS, vmax=0.1, vmin=-0.02, fname='corr_plot_all_HC_perlevel')
+    generate_corr_plot(df_HC_mean_levels, group='HC - MEAN', labels=LABELS_grouped, vmin=-0.02, vmax=0.05, fname='corr_plot_all_HC')
+
+   # generate_corr_plot(df_HC_mean_levels, group='HC - MEAN', labels=LABELS_grouped)
+
+
+    # FOR CR PATIENTS
+    ################################
+    print('\n CR PATIENTS')
     df_CR_row = df_CR.groupby(df_CR.index)
     df_CR_mean = df_CR_row.mean()  # calculate mean across subjects for each connection
-    print(df_CR_mean)
-    generate_corr_plot(df_CR_mean, group='CR')
+    print(df_CR_mean)  # TODO: save in csv file
+    np.savetxt('corr_matrix_all_CR_perlevel.csv', df_CR_mean, delimiter=",")
+
+    generate_corr_plot(df_CR_mean, group='CR', labels=LABELS, vmax=0.1, vmin=-0.02, fname='corr_plot_all_CR_perlevel')
+
+    df_CR_mean_levels = pd.DataFrame()
+    df_CR_mean_levels['LV'] = df_CR_mean[['LV_5', 'LV_6', 'LV_7']].mean(axis=1) #.iloc[[0,4,8]]
+    df_CR_mean_levels['RV'] = df_CR_mean[['RV_5', 'RV_6', 'RV_7']].mean(axis=1)#.iloc[[1,5,9]]
+    df_CR_mean_levels['RD'] = df_CR_mean[['RD_5', 'RD_6', 'RD_7']].mean(axis=1) #.iloc[[2,6,10]]
+    df_CR_mean_levels['LD'] = df_HC_mean[['LD_5', 'LD_6', 'LD_7']].mean(axis=1)#.iloc[[3,7,11]]
+    df_CR_mean_levels.iloc[[0]] = df_CR_mean_levels.iloc[[0,4,8]].mean()
+    df_CR_mean_levels.iloc[[1]] = df_CR_mean_levels.iloc[[1,5,9]].mean()
+    df_CR_mean_levels.iloc[[2]] = df_CR_mean_levels.iloc[[2,6,10]].mean()
+    df_CR_mean_levels.iloc[[3]] = df_CR_mean_levels.iloc[[3,7,11]].mean()
+    df_CR_mean_levels = df_CR_mean_levels[0:4]
+    #df_HC_mean_levels_combined = df_HC_mean_levels.groupby(df_HC_mean_levels.index).mean()
+    print(df_CR_mean_levels)
+    np.savetxt('corr_matrix_all_CR.csv', df_CR_mean_levels, delimiter=",")
+
+    generate_corr_plot(df_CR_mean_levels, group='CR - MEAN', labels=LABELS_grouped, vmin=-0.02, vmax=0.05, fname='corr_plot_all_CR')
+
+
+
     plt.show()
 
 if __name__ == "__main__":
