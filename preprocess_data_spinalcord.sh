@@ -237,7 +237,7 @@ if [[ $SES == *"spinalcord"* ]];then
         # Compute Right Left symmetry with dice score:
         mkdir -p ${PATH_DATA_PROCESSED}/${SUBJECT}/anat/T2w/dice_RL
         cd dice_RL
-        sct_register_to_template -i ../${file_t2w}.nii.gz -s ../${file_t2_seg}.nii.gz -ldisc ../${file_t2_labels}.nii.gz -param step=1,type=imseg,algo=centermassrot,metric=MeanSquares,iter=10,smooth=0,gradStep=0.5,slicewise=0,smoothWarpXY=2,pca_eigenratio_th=1.6 -qc ./qc -qc-subject ${SUBJECT}
+        sct_register_to_template -i ../${file_t2w}.nii.gz -s ../${file_t2_seg}.nii.gz -ldisc ../${file_t2_labels_discs}.nii.gz -param step=1,type=imseg,algo=centermassrot,metric=MeanSquares,iter=10,smooth=0,gradStep=0.5,slicewise=0,smoothWarpXY=2,pca_eigenratio_th=1.6 -qc ./qc -qc-subject ${SUBJECT}
         sct_apply_transfo -i ../${file_t2_seg}.nii.gz -d anat2template.nii.gz -w warp_anat2template.nii.gz -o ${file_t2_seg}_reg.nii.gz -x nn
         python $PATH_SCRIPTS/compute_dice_rl.py -seg ${file_t2_seg}_reg.nii.gz -vertfile $SCT_DIR/data/PAM50/template/PAM50_levels.nii.gz -levels 3 4 5 6 -fname-out dice_RL.csv -subject ${SUBJECT} -session ${SES}
         cd ..
