@@ -143,7 +143,7 @@ def main():
 #        vmin=-0.8,
         reorder=False,
     )
-  #  nilearn.plotting.show()
+    nilearn.plotting.show()
     display.figure.savefig(fname_out.split('.')[0] + '.png',dpi=300,)
     display = plot_carpet(
         image_bold,

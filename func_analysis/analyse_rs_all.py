@@ -83,7 +83,7 @@ def read_csv(path_results, template, exclude):
     df_corr_HC = pd.concat(list_corr_HC)
     df_corr_CR = pd.concat(list_corr_CR)
 
-    return df_corr_HC.abs(), df_corr_CR.abs()  # TODO : to check
+    return df_corr_HC, df_corr_CR  # TODO : to check df_corr_HC.abs(), df_corr_CR.abs() 
 
 
 LABELS = ['LV_5', 'RV_5', 'LD_5', 'RD_5',
@@ -119,25 +119,27 @@ def compute_t_test(df):
     # TODO: change to have one subject per row and column = connection
     t_list_A = []
     p_list_A = []
-
+    print(df)
+    data_split =np.dstack(np.vsplit(df.to_numpy(),23)) # TODO remove hard code
+    print(data_split.shape)
     # run a one-sample t-test for each connection
-    for index, row in df.iterrows():
-        t_test_A = stats.ttest_1samp(row, 0)
+    # for index, row in df.iterrows():
+    #     t_test_A = stats.ttest_1samp(row, 0)
 
-        t_list_A.append(t_test_A[0])
-        p_list_A.append(t_test_A[1])
+    #     t_list_A.append(t_test_A[0])
+    #     p_list_A.append(t_test_A[1])
 
-    df_t_A = pd.DataFrame(data=t_list_A, index = df.index, columns = ["t"])
-    df_p_A = pd.DataFrame(data=p_list_A, index = df.index, columns = ["p"])
+    # df_t_A = pd.DataFrame(data=t_list_A, index = df.index, columns = ["t"])
+    # df_p_A = pd.DataFrame(data=p_list_A, index = df.index, columns = ["p"])
 
-    # use FDR to correct for multiple comparisons
-    p_list_fdr_A = fdrcorrection(p_list_A, alpha = 0.05)
+    # # use FDR to correct for multiple comparisons
+    # p_list_fdr_A = fdrcorrection(p_list_A, alpha = 0.05)
 
-    df_true_false_A = pd.DataFrame(data=p_list_fdr_A[0], index=df_p_A.index, columns=["TrueFalse"])
-    df_fdr_A = pd.DataFrame(data=p_list_fdr_A[1], index=df_p_A.index, columns=["fdr"])
+    # df_true_false_A = pd.DataFrame(data=p_list_fdr_A[0], index=df_p_A.index, columns=["TrueFalse"])
+    # df_fdr_A = pd.DataFrame(data=p_list_fdr_A[1], index=df_p_A.index, columns=["fdr"])
 
-    matrix_fdr_A = df_fdr_A.unstack(level = -1)
-    print(matrix_fdr_A)
+    # matrix_fdr_A = df_fdr_A.unstack(level = -1)
+    #print(matrix_fdr_A)
 
 
 def main():
@@ -171,6 +173,8 @@ def main():
     # FOR HC
     ##########################
    # print(df_HC)  # TODO: save in csv file
+    # Get p-value
+    compute_t_test(df_HC)
     df_HC_row = df_HC.groupby(df_HC.index)
     df_HC_mean = df_HC_row.mean()  # calculate mean across subjects for each connection
     print(df_HC_mean)
@@ -192,11 +196,9 @@ def main():
     np.savetxt('corr_matrix_all_HC.csv', df_HC_mean_levels, delimiter=",")
 
 
-    # Get p-value
-    #compute_t_test(df_HC_row)
     # Corr plot for seperate level
-    generate_corr_plot(df_HC_mean, group='HC', labels=LABELS, vmax=0.1, vmin=-0.02, fname='corr_plot_all_HC_perlevel')
-    generate_corr_plot(df_HC_mean_levels, group='HC - MEAN', labels=LABELS_grouped, vmin=-0.02, vmax=0.05, fname='corr_plot_all_HC')
+    generate_corr_plot(df_HC_mean, group='HC', labels=LABELS, vmax=0.3, vmin=0, fname='corr_plot_all_HC_perlevel')
+    generate_corr_plot(df_HC_mean_levels, group='HC - MEAN', labels=LABELS_grouped, vmin=0, vmax=0.2, fname='corr_plot_all_HC')
 
    # generate_corr_plot(df_HC_mean_levels, group='HC - MEAN', labels=LABELS_grouped)
 
@@ -209,7 +211,7 @@ def main():
     print(df_CR_mean)  # TODO: save in csv file
     np.savetxt('corr_matrix_all_CR_perlevel.csv', df_CR_mean, delimiter=",")
 
-    generate_corr_plot(df_CR_mean, group='CR', labels=LABELS, vmax=0.1, vmin=-0.02, fname='corr_plot_all_CR_perlevel')
+    generate_corr_plot(df_CR_mean, group='CR', labels=LABELS, vmax=0.3, vmin=0, fname='corr_plot_all_CR_perlevel')
 
     df_CR_mean_levels = pd.DataFrame()
     df_CR_mean_levels['LV'] = df_CR_mean[['LV_5', 'LV_6', 'LV_7']].mean(axis=1) #.iloc[[0,4,8]]
@@ -225,7 +227,7 @@ def main():
     print(df_CR_mean_levels)
     np.savetxt('corr_matrix_all_CR.csv', df_CR_mean_levels, delimiter=",")
 
-    generate_corr_plot(df_CR_mean_levels, group='CR - MEAN', labels=LABELS_grouped, vmin=-0.02, vmax=0.05, fname='corr_plot_all_CR')
+    generate_corr_plot(df_CR_mean_levels, group='CR - MEAN', labels=LABELS_grouped, vmin=0, vmax=0.2, fname='corr_plot_all_CR')
 
 
 
