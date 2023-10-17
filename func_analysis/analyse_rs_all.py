@@ -4,6 +4,10 @@
 # Analyse resting state functional connectivity in subject's space for all subjects
 
 # Author: Sandrine Bédard
+# TODO: create a log file with input name
+
+# Example of command:
+# python analyse_rs_all.py -i-folder /mnt/p/Mackeylab/Individual_Folders/Sandrine/func_analysis_2023-10-13-thr05-v2/results/ -path-out /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/func_results_all_2023-10-17-thr05-template -exclude /mnt/c/Users/sb199/k23-cervical-radiculopathy/exclude.yml -template
 
 import os
 import logging

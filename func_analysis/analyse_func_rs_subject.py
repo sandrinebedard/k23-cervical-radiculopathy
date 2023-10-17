@@ -45,13 +45,13 @@ def get_parser():
     parser.add_argument("-low-freq",
                         type=float,
                         required=False,
-                        default=0.010,
+                        default=None,#0.010,
                         help='Low frequency for bandpass filtering.')
 
     parser.add_argument("-high-freq",
                         type=float,
                         required=False,
-                        default=0.13,
+                        default=None,#0.13,
                         help='High frequency for bandpass filtering.')
 
     parser.add_argument("-TR",

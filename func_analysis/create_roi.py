@@ -3,6 +3,9 @@
 # For usage, type: python create_roi.py -h
 
 # Create rois for resting state functional connectivity analysis. Either for subject's space or for PAM50 space
+# To create ROIS for PAM50 space:
+# python create_roi.py -label /mnt/c/Users/sb199/spinalcordtoolbox/data/PAM50/ -levels 5 6 7 
+# -thr 0.5 -o-folder /mnt/c/Users/sb199/Projet3_data/k23_cervical_radiculopathy/ -number-slices 24
 
 # Author: Sandrine Bédard
 
