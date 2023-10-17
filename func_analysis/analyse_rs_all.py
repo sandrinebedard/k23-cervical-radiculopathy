@@ -83,7 +83,7 @@ def read_csv(path_results, template, exclude):
     df_corr_HC = pd.concat(list_corr_HC)
     df_corr_CR = pd.concat(list_corr_CR)
 
-    return df_corr_HC, df_corr_CR
+    return df_corr_HC.abs(), df_corr_CR.abs()  # TODO : to check
 
 
 LABELS = ['LV_5', 'RV_5', 'LD_5', 'RD_5',
@@ -108,7 +108,7 @@ def generate_corr_plot(df_mean, group, labels,  vmin=None, vmax=None, fname=None
                 square=True, linewidths=.5, xticklabels=labels, yticklabels=labels, 
                 annot=True, fmt=".2f",
                 cbar_kws={"shrink": .6, "label": "Z-transformed Pearson R"}).set(xlabel="Seed Region", ylabel="Seed Region")
-    plt.title(f'Connecivity {group}')
+    plt.title(f'Connectivity {group}')
     plt.yticks(rotation=0)
     plt.xticks(rotation=90)
     plt.savefig(fname+ '.png',dpi=300,)

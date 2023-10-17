@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # default: logging.DEBUG, logging.INFO
 hdlr = logging.StreamHandler(sys.stdout)
 logging.root.addHandler(hdlr)
+from nilearn.plotting import plot_carpet
 
 # TODO:
 # Add option to smooth along the spinal cord
@@ -45,13 +46,13 @@ def get_parser():
     parser.add_argument("-low-freq",
                         type=float,
                         required=False,
-                        default=None,#0.010,
+                        default=0.01,
                         help='Low frequency for bandpass filtering.')
 
     parser.add_argument("-high-freq",
                         type=float,
                         required=False,
-                        default=None,#0.13,
+                        default=0.1,
                         help='High frequency for bandpass filtering.')
 
     parser.add_argument("-TR",
@@ -97,6 +98,7 @@ def main():
     low_freq = args.low_freq
     high_freq = args.high_freq
     fname_out = args.o
+    TR = args.TR
 
     # TODO: add spatial smoothing if in native space
     print('Loading rois')
@@ -115,7 +117,8 @@ def main():
                                standardize="zscore_sample",
                                high_pass=low_freq,
                                low_pass=high_freq,
-                               t_r=3,
+                               smoothing_fwhm=2,
+                               t_r=TR,
                                verbose=5)
 
     logger.info('Fit transform')
@@ -140,8 +143,15 @@ def main():
 #        vmin=-0.8,
         reorder=False,
     )
-    nilearn.plotting.show()
+  #  nilearn.plotting.show()
     display.figure.savefig(fname_out.split('.')[0] + '.png',dpi=300,)
+    display = plot_carpet(
+        image_bold,
+        atlas,
+        t_r=3,
+    )
+    #nilearn.plotting.show()
+    #display.figure.savefig(fname_out.split('.')[0] + 'carpetplot_filt090.png',dpi=300,)
     # Save correlation matrix
     np.savetxt(fname_out, correlation_matrix, delimiter=",")
 
