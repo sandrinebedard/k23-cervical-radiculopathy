@@ -43,7 +43,7 @@ def main():
     pam50_r_l[np.where(pam50_r > 0)] = 1
     pam50_r_l[np.where(pam50_l > 0)] = 2
     # Dilate mask such as the labels don't overlap
-    pam50_r_l_dilated = expand_labels(pam50_r_l, distance=5)
+    pam50_r_l_dilated = expand_labels(pam50_r_l, distance=7) # changed to 5 to 7, to validate
     mask_right = np.zeros(np.shape(seg_np))
     mask_right[np.where(pam50_r_l_dilated == 1)] = 1
     mask_left = np.zeros(np.shape(seg_np))
