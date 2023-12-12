@@ -157,3 +157,9 @@ python analyse_anatomical.py -i-folder /mnt/c/Users/sb199/Projet3_data/k23_cervi
 cd func_analysis
 sct_run_batch -path-data <DATA_PROCESSED> -path-out <PATH-OUT> -script run_subject_level_rs_conn.sh -script-args <PATH_DERIVATIVES> -jobs 10
 ~~~
+
+Example of command :
+
+~~~
+sct_run_batch -path-data ~/mackeylab/Individual_Folders/Sandrine/sc_analysis_test_all_baseline_2023-11-23/data_processed/ -path-out ~/func_analysis_2023-12-12_newPAM50 -script-args ~/mackeylab/PROJECTS/K23_Cervical_Radiculopathy/data/BIDS/derivatives/labels/ -script run_subject_level_rs_conn.sh -jobs 10
+~~~
