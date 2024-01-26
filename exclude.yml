@@ -4,6 +4,11 @@
 - sub-HC007  # Left handed & unmatched
 - sub-HC019  # Unmatched
 - sub-HC023  # A lot of movements between scans, unmatched
+- sub-CR036  # Image not analysed yet
+- sub-CR011  # NO IMAGING
+- sub-CR024  # NO IMAGING
+- sub-CR030  # NO IMAGING
+- sub-CR032  # NO IMAGING
 #- sub-CR034  # TO REMOVE matched is comin sept 29
 
 # DWI
