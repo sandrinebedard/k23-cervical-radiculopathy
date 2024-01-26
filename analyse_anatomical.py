@@ -18,6 +18,7 @@ from datetime import datetime
 import scipy.stats as stats
 import yaml
 
+
 FNAME_LOG = 'log_stats.txt'
 
 # Initialize logging
@@ -73,6 +74,14 @@ def get_parser():
                         type=str,
                         required=True,
                         help="Folder to right results")
+    parser.add_argument("-record-id",
+                        type=str,
+                        required=False,
+                        help="Excel file with record ID")
+    parser.add_argument("-ndi",
+                        type=str,
+                        required=False,
+                        help="csv file with NDI")
     parser.add_argument("-exclude-list",
                         required=False,
                         type=str,
@@ -113,7 +122,7 @@ def format_pvalue(p_value, alpha=0.001, decimal_places=3, include_space=True, in
     return p_value
 
 
-def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
+def compare_metrics_across_group(df, perlevel=False, metric_chosen=None):
     """
     Compute Wilcoxon rank-sum tests between males and females for each metric.
     """
@@ -121,8 +130,9 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
     logger.info("")
 
     for metric in METRICS:
-        print(f"\n{metric}")
-
+        logger.info(f"\n{metric}")
+        if metric_chosen:
+            metric=metric_chosen
         if perlevel:
             slices_HC = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].mean()
             slices_HC_STD = df[df['group'] == 'HC'].groupby(['VertLevel'])[metric].std()
@@ -153,7 +163,7 @@ def compare_metrics_across_group(df, perlevel=False, metric_chosen=False):
            break
 
 
-def get_vert_indices(df):
+def get_vert_indices(df, vertlevel='VertLevel'):
     """
     Get indices of slices corresponding to mid-vertebrae
     Args:
@@ -164,7 +174,7 @@ def get_vert_indices(df):
         ind_vert_mid (np.array): indices of slices corresponding to mid-levels
     """
     # Get vert levels for one certain subject
-    vert = df[df['participant_id'] == 'sub-CR001_ses-baselinespinalcord']['VertLevel']
+    vert = df[df['participant_id'] == 'sub-CR001_ses-baselinespinalcord'][vertlevel]
     # Get indexes of where array changes value
     ind_vert = vert.diff()[vert.diff() != 0].index.values
     # Get the beginning of C1
@@ -183,15 +193,54 @@ def read_t2w_pam50(fname, suffix='_T2w_seg.nii.gz', session=None, exclude_list=N
     data['participant_id'] = (data['Filename'].str.split('/').str[-1]).str.replace(suffix, '')
     data['session'] = data['participant_id'].str.split('_').str[-1]
     data['group'] = data['participant_id'].str.split('_').str[-2].str.split('-').str[-1].str[0:2]
-    #print('Subjects', np.unique(data['participant_id'].to_list()))
     # Drop subjects with id
     if exclude_list:
         for subject in exclude_list:
             sub = (subject+'_'+ session)
             logger.info(f'dropping {sub}')
             data = data.drop(data[data['participant_id'] == sub].index, axis=0)
-
     return data.loc[data['session'] == session]
+
+
+def read_dice(fname, session=None, exclude_list=None):
+    data = pd.read_csv(fname)
+    data['participant_id'] = data['Subject'].str.split('/').str[0] + '_' + data['Subject'].str.split('/').str[1]
+    data.drop(columns=['Subject'], inplace=True)
+    data.rename(columns={"Session": "session", 'Level':'VertLevel', 'Slice':'Slice (I->S)'}, inplace=True)
+    # Drop subjects with id
+    if exclude_list:
+        for subject in exclude_list:
+            sub = (subject+'_'+ session)
+            logger.info(f'dropping {sub}')
+            data = data.drop(data[data['participant_id'] == sub].index, axis=0)
+    data['group'] = data['participant_id'].str.split('_').str[-2].str.split('-').str[-1].str[0:2]
+    return data.loc[data['session'] == session]
+
+
+def read_ndi(fname, fname_record_id, exclude_list=None, session=None):
+    if os.path.isfile(fname):
+        logger.info('Reading: {}'.format(fname))
+        df = pd.read_csv(fname)
+    else:
+        raise FileNotFoundError(f'{fname} not found')
+
+    # Read record id:
+    if os.path.isfile(fname_record_id):
+        logger.info('Reading: {}'.format(fname_record_id))
+        df_record_id = pd.read_excel(fname_record_id)
+    else:
+        raise FileNotFoundError(f'{fname_record_id} not found')
+    # Insert participant_id column from df_participants to anatomical_df based on record_id
+    df_ndi = pd.merge(df, df_record_id[['record_id', 'participant_id']], on='record_id',
+                             how='outer', sort=True)
+    df_ndi['participant_id'] = df_ndi['participant_id'] + '_' + session
+    # Drop subjects with id
+    if exclude_list:
+        for subject in exclude_list:
+            sub = (subject+'_'+ session)
+            logger.info(f'dropping {sub}')
+            df_ndi = df_ndi.drop(df_ndi[df_ndi['participant_id'] == sub].index, axis=0)
+    return df_ndi
 
 
 def get_number_subjects(df, session):
@@ -207,6 +256,92 @@ def get_number_subjects(df, session):
     logger.info(f'Total number of subject for {session}: {nb_subjects_session}')
     logger.info(f'With CR = {nb_subject_CR} and HC = {nb_subject_HC}')
 
+
+def plot_dice(df, hue, metric, path_out, filename):
+    plt.figure()
+    fig, ax = plt.subplots()
+    sns.lineplot(ax=ax, data=df, x="Slice (I->S)", y=metric, errorbar='sd', hue=hue, linewidth=2,
+                 palette=PALETTE[hue])
+    ymin, ymax = ax.get_ylim()
+    # Get indices of slices corresponding vertebral levels
+    vert, ind_vert, ind_vert_mid = get_vert_indices(df, vertlevel='VertLevel')
+    # Insert a vertical line for each intervertebral disc
+    for idx, x in enumerate(ind_vert[1:-1]):
+        ax.axvline(df.loc[x, 'Slice (I->S)'], color='black', linestyle='--', alpha=0.5, zorder=0)
+    # Insert a text label for each vertebral level
+    for idx, x in enumerate(ind_vert_mid, 0):
+        # Deal with T1 label (C8 -> T1)
+        if vert[x] > 7:
+            level = 'T' + str(vert[x] - 7)
+            ax.text(df.loc[ind_vert_mid[idx], 'Slice (I->S)'], ymin, level, horizontalalignment='center',
+                            verticalalignment='bottom', color='black', fontsize=TICKS_FONT_SIZE)
+        else:
+            level = 'C' + str(vert[x])
+            ax.text(df.loc[ind_vert_mid[idx], 'Slice (I->S)'], ymin, level, horizontalalignment='center',
+                            verticalalignment='bottom', color='black', fontsize=TICKS_FONT_SIZE)
+
+    # Invert x-axis
+    ax.invert_xaxis()
+    # Add only horizontal grid lines
+    ax.yaxis.grid(True)
+    # Move grid to background (i.e. behind other elements)
+    ax.set_axisbelow(True)    
+
+    # Save figure
+    path_filename = os.path.join(path_out, filename)
+    plt.savefig(path_filename, dpi=500, bbox_inches='tight')
+    logger.info('Figure saved: ' + path_filename)
+
+
+def avg_metrics(df, nb_slices=8, vertlevel='VertLevel', metric=None):
+    # Get indices of slices corresponding vertebral levels
+    vert, ind_vert, ind_vert_mid = get_vert_indices(df, vertlevel=vertlevel)
+    Levels = [3, 4, 5]
+    vert_unique = np.unique(vert)[::-1]
+    df_avg = pd.DataFrame()
+    j=0
+    list_participants = np.unique(df['participant_id'])
+    participants = []
+    groups = []
+    vertlevels = []
+    sessions = []
+    for metric_id in METRICS:
+        total_metric_mean = [] 
+
+        print(metric_id)
+        if metric:
+            metric_id = metric
+        for level in Levels:
+            for participant in list_participants:
+                idx = np.argwhere(vert_unique==level)
+                slice_nb_mid = df.loc[ind_vert[idx][0][0], 'Slice (I->S)']
+                slice_nb_min = slice_nb_mid - nb_slices//2
+                slice_nb_max = slice_nb_mid + nb_slices//2
+                # Get dataframe of single participant
+                df_participant = df.loc[df['participant_id']==participant]
+                metric_mean = 0
+                # Fetch metric
+                i=0
+                for slice_nb in range(slice_nb_min, slice_nb_max + 1):
+                    metric_mean += df_participant.loc[df_participant['Slice (I->S)']==slice_nb, metric_id].values[0]
+                    i+=1
+                # Average metric
+                metric_mean = metric_mean/i
+                total_metric_mean.append(metric_mean)
+                if j < 1:
+                    participants.append(participant)
+                    vertlevels.append(level)
+                    groups.append(np.unique(df_participant['group'])[0])
+                    sessions.append(np.unique(df_participant['session'])[0])
+        df_avg[metric_id] = total_metric_mean
+        j+=1
+        if metric:
+            break
+    df_avg['participant_id'] = participants
+    df_avg['VertLevel'] = vertlevels
+    df_avg['session'] = sessions
+    df_avg['group'] = groups
+    return df_avg
 
 def create_lineplot(df, hue, path_out, filename=None):
     """
@@ -283,7 +418,17 @@ def create_lineplot(df, hue, path_out, filename=None):
         filename = 'lineplot.png'
     path_filename = os.path.join(path_out, filename)
     plt.savefig(path_filename, dpi=500, bbox_inches='tight')
-    print('Figure saved: ' + path_filename)
+    logger.info('Figure saved: ' + path_filename)
+
+
+def r_pvalues(df):
+    cols = pd.DataFrame(columns=df.columns)
+    p = cols.transpose().join(cols, how='outer')
+    for r in df.columns:
+        for c in df.columns:
+            tmp = df[df[r].notnull() & df[c].notnull()]
+            p[r][c] = round(stats.spearmanr(tmp[r], tmp[c])[1], 4)
+    return p
 
 
 def main():
@@ -291,6 +436,15 @@ def main():
     args = get_parser().parse_args()
     # Get input argments
     input_folder = args.i_folder
+    if args.ndi:
+        fname_ndi = args.ndi
+    else: 
+        fname_ndi = None
+    if args.record_id:
+        fname_record_id = args.record_id
+    else: 
+        fname_record_id = None
+
     if args.exclude_list:
         exclude_list = args.exclude_list
     else: 
@@ -310,7 +464,7 @@ def main():
                 logger.error(exc)
     else:
         exclude = []
-    print(exclude)
+    logger.info(exclude)
 
     session = args.session
     output_folder = args.o_folder
@@ -326,9 +480,8 @@ def main():
     logging.root.addHandler(fh)
 
 
-    # TODO: Create an exlclude list
-
     # Analyse T2w perslice
+    #################################################################
     logger.info('\nAnalysing T2w CSA perslice in PAM50 anatomical dimension')
     filename = os.path.join(input_folder, "t2w_shape_PAM50.csv")
     df_t2_pam50 = read_t2w_pam50(filename, session=session, exclude_list=exclude)
@@ -339,8 +492,16 @@ def main():
    # df_t2_pam50 = df_t2_pam50[df_t2_pam50['VertLevel'] > 1]
     create_lineplot(df_t2_pam50, 'group', output_folder)
     compare_metrics_across_group(df_t2_pam50)
+    # Aggregate metrics at disc levels:
+    # TODO: do for all metrics
+    df_t2w_pam50_avg = avg_metrics(df_t2_pam50)
+    print(df_t2w_pam50_avg)
+    #df_t2w_pam50_avg = avg_metrics(df_t2_pam50, metric='MEAN(area)')
+    logger.info('\n Comparing CSA at disc level...')
+    compare_metrics_across_group(df_t2w_pam50_avg, perlevel=True)
 
     # Load T2w perlevel
+    #################################################################
     logger.info('\nAnalysing T2w CSA perlevel')
     filename = os.path.join(input_folder, "t2w_shape_perlevel.csv")
     df_t2_perlevel = read_t2w_pam50(filename, session=session, exclude_list=exclude)
@@ -350,16 +511,17 @@ def main():
     compare_metrics_across_group(df_t2_perlevel, perlevel=True)
 
     # Load T2star
+    #################################################################
     logger.info('\nAnalysing GM CSA')
     filename = os.path.join(input_folder, "t2star_gm_csa.csv")
     df_t2star_gm = read_t2w_pam50(filename, suffix='_T2star_gmseg.nii.gz', session=session, exclude_list=exclude)
     df_t2star_gm = df_t2star_gm[df_t2star_gm['VertLevel'] <= 6]  # Values chosen following the coverage 
     df_t2star_gm = df_t2star_gm[df_t2star_gm['VertLevel'] > 2]  # Values chosen following the coverage 
-    compare_metrics_across_group(df_t2star_gm, perlevel=True, metric_chosen=True)
+    compare_metrics_across_group(df_t2star_gm, perlevel=True, metric_chosen='MEAN(area)')
 
 
-# Test perslice  right vs left CSA
-
+    # Test perslice  right vs left CSA
+    #################################################################
     # Analyse T2w perslice
     logger.info('\nAnalysing T2w CSA right perslice in PAM50 anatomical dimension')
     filename = os.path.join(input_folder, "t2w_shape_right_PAM50.csv")
@@ -369,6 +531,13 @@ def main():
     # Keep only VertLevel from C2 to T1
     df_t2_pam50_right = df_t2_pam50_right[df_t2_pam50_right['VertLevel'] <= 8]
     compare_metrics_across_group(df_t2_pam50_right)
+    plot_dice(df_t2_pam50_right, hue='group', metric='MEAN(area)', path_out=output_folder, filename='right_CSA.png')
+
+    # Agregate at disc levels:
+    df_t2_pam50_right_avg = avg_metrics(df_t2_pam50_right, metric='MEAN(area)')
+    print(df_t2_pam50_right_avg)
+    logger.info('\n Comparing right CSA at disc level...')
+    compare_metrics_across_group(df_t2_pam50_right_avg, perlevel=True, metric_chosen='MEAN(area)')
 
 
     # Load T2w perlevel
@@ -377,9 +546,12 @@ def main():
     df_t2_right_perlevel = read_t2w_pam50(filename, suffix='_T2w_seg_right.nii.gz', session=session, exclude_list=exclude)
     df_t2_right_perlevel = df_t2_right_perlevel[df_t2_right_perlevel['VertLevel'] <= 8]
     df_t2_right_perlevel = df_t2_right_perlevel[df_t2_right_perlevel['VertLevel'] > 1]
-    compare_metrics_across_group(df_t2_right_perlevel, perlevel=True, metric_chosen=True)
+    compare_metrics_across_group(df_t2_right_perlevel, perlevel=True, metric_chosen='MEAN(area)')
 
-    # Analyse T2w perslice
+    
+
+    # Analyse T2w perslice for LEFT
+    ##########################################
     logger.info('\nAnalysing T2w CSA Left perslice in PAM50 anatomical dimension')
     filename = os.path.join(input_folder, "t2w_shape_left_PAM50.csv")
     df_t2_pam50_left = read_t2w_pam50(filename, suffix='_T2w_seg_left.nii.gz', session=session, exclude_list=exclude)
@@ -388,14 +560,19 @@ def main():
     # Keep only VertLevel from C2 to T1
     df_t2_pam50_left = df_t2_pam50_left[df_t2_pam50_left['VertLevel'] <= 8]
     compare_metrics_across_group(df_t2_pam50_left)
+    # Agregate at disc levels:
+    df_t2_pam50_left_avg = avg_metrics(df_t2_pam50_left, metric='MEAN(area)')
+    logger.info('\n Comparing right CSA at disc level...')
+    compare_metrics_across_group(df_t2_pam50_left_avg, perlevel=True, metric_chosen='MEAN(area)')
 
+    
     # Load T2w perlevel
     logger.info('\nAnalysing T2w CSA left perlevel')
     filename = os.path.join(input_folder, "t2w_shape_left_perlevel.csv")
     df_t2_left_perlevel = read_t2w_pam50(filename, suffix='_T2w_seg_left.nii.gz', session=session, exclude_list=exclude)
     df_t2_left_perlevel = df_t2_left_perlevel[df_t2_left_perlevel['VertLevel'] <= 8]
     df_t2_left_perlevel = df_t2_left_perlevel[df_t2_left_perlevel['VertLevel'] > 1]
-    compare_metrics_across_group(df_t2_left_perlevel, perlevel=True, metric_chosen=True)
+    compare_metrics_across_group(df_t2_left_perlevel, perlevel=True, metric_chosen='MEAN(area)')
 
 
 # Compute test between R-L CSA
@@ -422,6 +599,99 @@ def main():
 
     ttest, pval = stats.wilcoxon(participants_CR_R, participants_CR_L)
     logger.info(f'MEAN(area): Wilcoxon signed-rank test between Right and left for CR: p-value{format_pvalue(pval)}')
+
+# Compute unique symmetry metric with CSA
+###########################################################
+#df_t2_pam50_left_avg
+#df_t2_pam50_right_avg
+    levels = np.unique(df_t2_pam50_left_avg['VertLevel'])
+    df_symmetry_dice = pd.DataFrame(columns=['participant_id', 'VertLevel', 'group', 'session', 'symmetry'])
+    for level in levels:
+        r = np.array(df_t2_pam50_right_avg.loc[df_t2_pam50_right_avg['VertLevel']==level, 'MEAN(area)'].to_list())
+        l = np.array(df_t2_pam50_left_avg.loc[df_t2_pam50_left_avg['VertLevel']==level, 'MEAN(area)'].to_list())
+        symmetry = 100*(l - r )/ (l + r)
+        levels_list = df_t2_pam50_right_avg.loc[df_t2_pam50_right_avg['VertLevel']==level, 'VertLevel'].to_list()
+        participants = df_t2_pam50_right_avg.loc[df_t2_pam50_right_avg['VertLevel']==level, 'participant_id'].to_list()
+        groups = participants = df_t2_pam50_right_avg.loc[df_t2_pam50_right_avg['VertLevel']==level, 'group'].to_list()
+        sessions = df_t2_pam50_right_avg.loc[df_t2_pam50_right_avg['VertLevel']==level, 'session'].to_list()
+        df_symmetry_dice_level = pd.DataFrame({'participant_id': participants , 'VertLevel':levels_list, 'group': groups, 'session':sessions, 'symmetry':symmetry})
+        df_symmetry_dice = pd.concat([df_symmetry_dice_level, df_symmetry_dice], ignore_index = True) 
+        df_symmetry_dice.reset_index()  
+    print(df_symmetry_dice)
+    compare_metrics_across_group(df_symmetry_dice, perlevel=True, metric_chosen='symmetry')
+
+# Load dice score
+###########################################################
+
+# Average morphometric results:
+    logger.info('\nAnalysing T2w symmetry with DICE perslice in PAM50 anatomical dimension')
+    filename = os.path.join(input_folder, "dice_RL.csv")
+    df_dice = read_dice(filename, session=session, exclude_list=exclude)
+    logger.info(np.unique(df_dice['VertLevel']))
+    compare_metrics_across_group(df_dice, perlevel=False, metric_chosen='Dice')
+    plot_dice(df_dice, hue='group', metric='Dice', path_out=output_folder, filename='dice_plot.png')
+    # Agregate at disc levels:
+    df_dice_avg = avg_metrics(df_dice, metric='Dice')
+    logger.info('\n Comparing DICE at disc level...')
+    compare_metrics_across_group(df_dice_avg, perlevel=True, metric_chosen='Dice')
+
+
+# Load neck disability index
+###########################################################################
+    df_ndi = read_ndi(fname_ndi, fname_record_id, exclude_list=exclude, session=session)
+# Merge all CSA dataframe TODO put in a function
+    print(df_ndi.columns)
+    df_all_level3 = df_t2w_pam50_avg.loc[df_t2w_pam50_avg['VertLevel']==3]
+    df_all_level3 = df_all_level3.rename(columns={'MEAN(area)':'MEAN(area)_3'}) # TODO: extent to other metrics
+    df_all_level3.drop(columns=['VertLevel'], inplace=True)
+    df_all_level3.reset_index()
+
+    df_all_level4 = df_t2w_pam50_avg.loc[df_t2w_pam50_avg['VertLevel']==4].copy()
+    df_all_level4.rename(columns={'MEAN(area)':'MEAN(area)_4'}, inplace=True) # TODO: extent to other metrics
+
+    df_all_level5 = df_t2w_pam50_avg.loc[df_t2w_pam50_avg['VertLevel']==5]
+    df_all_level5.rename(columns={'MEAN(area)':'MEAN(area)_5'}, inplace=True)
+
+    df_all = pd.merge(df_all_level3, df_ndi, on='participant_id',
+                             how='outer', sort=True)
+    df_all = pd.merge(df_all, df_all_level4[['participant_id', 'MEAN(area)_4']], on='participant_id',
+                             how='outer', sort=True)
+    df_all = pd.merge(df_all, df_all_level5[['participant_id', 'MEAN(area)_5']], on='participant_id',
+                             how='outer', sort=True)
+    print(df_all.columns)
+    # Run spearman correlation between CSA and NDI:
+    # Get correlation matrix
+    df_all.set_index(['participant_id'], inplace=True)
+
+    # Get correlation matrix only for CR
+    df_all['MEAN(area)'] = df_all[['MEAN(area)_3', 'MEAN(area)_4', 'MEAN(area)_5']].mean(axis=1)
+    df_all_CR = df_all.loc[df_all['group']=='CR']
+    corr_matrix = df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']).corr(method='spearman')
+    corr_matrix_pvalue = r_pvalues(df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']))
+    corr_filename = os.path.join(output_folder, 'corr_table_CR')
+    # Save a.csv file of the correlation matrix in the results folder
+    corr_matrix.to_csv(corr_filename + '.csv')
+    corr_matrix_pvalue.to_csv( os.path.join(output_folder, 'corr_table_CR_pvalue')+ '.csv')
+
+
+    # Get correlation matrix only for HC
+    df_all_HC = df_all.loc[df_all['group']=='HC']
+    corr_matrix = df_all_HC.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']).corr(method='spearman')
+    # Save a.csv file of the correlation matrix in the results folder
+    corr_filename = os.path.join(output_folder, 'corr_table_HC')
+    corr_matrix.to_csv(corr_filename + '.csv')
+
+
+    # Scatter plot NDI vs CSA
+    plt.figure()
+    sns.regplot(x='ndi_score', y='MEAN(area)_4', data=df_all_CR, )
+    plt.savefig( os.path.join(output_folder, 'scatterplot4.png'))
+
+
+# Create a dataframe with all metrics:
+# TODO: add all mtophometrics at disc for corr matrix
+# TODO aggregate in one dataframe all metrics perlevel & mean
+# Create a multilinear model with all variables (with sex)
 
 if __name__ == "__main__":
     main()
