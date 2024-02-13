@@ -603,24 +603,32 @@ if [[ $SES == *"spinalcord"* ]];then
         sct_maths -i ${file_task_rest_bold}.nii.gz -mean t -o ${file_task_rest_bold}_mean.nii.gz
         file_task_rest_bold_mean="${file_task_rest_bold}_mean"
         
-        # Segment the spinal cord
-        segment_if_does_not_exist ${file_task_rest_bold_mean} 't2s' 'propseg' 'func'
-        # Create a spinal canal mask
-        sct_maths -i ${file_task_rest_bold_mean}_seg.nii.gz -add ${file_task_rest_bold_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
-        # Dilate the spinal canal mask
-        # check dilating
-        sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
-        
-        # Dilate the mask more for sub-CR008-ses-baselinespinalcord
-        if [[ $file_task_rest_bold == *"CR008_ses-baselinespinalcord"* ]];then
-            sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 10 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+        # Create mask if doesn't exist:
+        FILE_MASK="${PATH_DERIVATIVES}/${SUBJECT}/func/${file_task_rest_bold_mean}_mask.nii.gz"
+        echo
+        echo "Looking for manual spinal mask: $FILE_MASK"
+        if [[ -e $FILE_MASK ]]; then
+          echo "Found! Using manual segmentation."
+          rsync -avzh $FILE_MASK "${file_task_rest_bold_mean}_mask.nii.gz"
+        else
+          # Segment the spinal cord
+          segment_if_does_not_exist ${file_task_rest_bold_mean} 't2s' 'propseg' 'func'
+          # Create a spinal canal mask
+          sct_maths -i ${file_task_rest_bold_mean}_seg.nii.gz -add ${file_task_rest_bold_mean}_CSF_seg.nii.gz -o ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz
+          # Dilate the spinal canal mask
+          # check dilating
+          sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 5 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+          # Dilate the mask more for sub-CR008-ses-baselinespinalcord
+          if [[ $file_task_rest_bold == *"CR008_ses-baselinespinalcord"* ]];then
+              sct_maths -i ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -dilate 10 -shape disk -o ${file_task_rest_bold_mean}_mask.nii.gz -dim 2
+          fi
+          # Qc of Spinal canal segmentation
+          sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         fi
-        
-        # Qc of Spinal canal segmentation
-        sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
         # Qc of mask
         sct_qc -i ${file_task_rest_bold_mean}.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s ${file_task_rest_bold_mean}_mask.nii.gz -qc-subject ${SUBJECT}
 
+       
         # Convert GE physio data to FSL format
         #python3 $PATH_SCRIPTS/pnm/create_FSL_physio_text_file.py -i ${file_task_rest_physio}.tsv -TR 3.0 -number-of-volumes 245
 
