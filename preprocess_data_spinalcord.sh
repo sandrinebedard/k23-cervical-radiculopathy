@@ -662,15 +662,24 @@ if [[ $SES == *"spinalcord"* ]];then
         
 
         # Step 2 of 2D motion correction using mean of mc1 as ref
-        # Segment the spinal cord
-        segment_if_does_not_exist mc1_mean 't2s' 'propseg' 'func'
-        # Create a spinal canal mask
-        sct_maths -i mc1_mean_seg.nii.gz -add mc1_mean_CSF_seg.nii.gz -o mc1_mean_SC_canal_seg.nii.gz
-        # Dilate the spinal canal mask
-        # check dilating
-        sct_maths -i mc1_mean_SC_canal_seg.nii.gz -dilate 5 -shape disk -o mc1_mask.nii.gz -dim 2
-        # Qc of Spinal canal segmentation
-        sct_qc -i mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
+# Create mask if doesn't exist:
+        FILE_MASK="${PATH_DERIVATIVES}/${SUBJECT}/func/mc1_mask.nii.gz"
+        echo
+        echo "Looking for manual spinal mask: $FILE_MASK"
+        if [[ -e $FILE_MASK ]]; then
+          echo "Found! Using manual segmentation."
+          rsync -avzh $FILE_MASK "mc1_mask.nii.gz"
+        else
+          # Segment the spinal cord
+          segment_if_does_not_exist mc1_mean 't2s' 'propseg' 'func'
+          # Create a spinal canal mask
+          sct_maths -i mc1_mean_seg.nii.gz -add mc1_mean_CSF_seg.nii.gz -o mc1_mean_SC_canal_seg.nii.gz
+          # Dilate the spinal canal mask
+          # check dilating
+          sct_maths -i mc1_mean_SC_canal_seg.nii.gz -dilate 5 -shape disk -o mc1_mask.nii.gz -dim 2
+          # Qc of Spinal canal segmentation
+          sct_qc -i mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mean_SC_canal_seg.nii.gz -qc-subject ${SUBJECT}
+        fi
         # Qc of mask
         sct_qc -i  mc1_mean.nii.gz -p sct_deepseg_sc -qc ${PATH_QC} -s mc1_mask.nii.gz -qc-subject ${SUBJECT}
 
