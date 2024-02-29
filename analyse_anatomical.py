@@ -76,14 +76,14 @@ def get_parser():
                         help="Folder to right results")
     parser.add_argument("-record-id",
                         type=str,
-                        required=False,
+                        required=True,
                         help="Excel file with record ID")
     parser.add_argument("-ndi",
                         type=str,
-                        required=False,
+                        required=True,
                         help="csv file with NDI")
     parser.add_argument("-exclude-list",
-                        required=False,
+                        required=True,
                         type=str,
                         help="Subjects to exclude form analysis")
     return parser
@@ -262,6 +262,45 @@ def plot_dice(df, hue, metric, path_out, filename):
     fig, ax = plt.subplots()
     sns.lineplot(ax=ax, data=df, x="Slice (I->S)", y=metric, errorbar='sd', hue=hue, linewidth=2,
                  palette=PALETTE[hue])
+    ymin, ymax = ax.get_ylim()
+    # Get indices of slices corresponding vertebral levels
+    vert, ind_vert, ind_vert_mid = get_vert_indices(df, vertlevel='VertLevel')
+    # Insert a vertical line for each intervertebral disc
+    for idx, x in enumerate(ind_vert[1:-1]):
+        ax.axvline(df.loc[x, 'Slice (I->S)'], color='black', linestyle='--', alpha=0.5, zorder=0)
+    # Insert a text label for each vertebral level
+    for idx, x in enumerate(ind_vert_mid, 0):
+        # Deal with T1 label (C8 -> T1)
+        if vert[x] > 7:
+            level = 'T' + str(vert[x] - 7)
+            ax.text(df.loc[ind_vert_mid[idx], 'Slice (I->S)'], ymin, level, horizontalalignment='center',
+                            verticalalignment='bottom', color='black', fontsize=TICKS_FONT_SIZE)
+        else:
+            level = 'C' + str(vert[x])
+            ax.text(df.loc[ind_vert_mid[idx], 'Slice (I->S)'], ymin, level, horizontalalignment='center',
+                            verticalalignment='bottom', color='black', fontsize=TICKS_FONT_SIZE)
+
+    # Invert x-axis
+    ax.invert_xaxis()
+    # Add only horizontal grid lines
+    ax.yaxis.grid(True)
+    # Move grid to background (i.e. behind other elements)
+    ax.set_axisbelow(True)    
+
+    # Save figure
+    path_filename = os.path.join(path_out, filename)
+    plt.savefig(path_filename, dpi=500, bbox_inches='tight')
+    logger.info('Figure saved: ' + path_filename)
+
+
+def plot_ind_sub(df, metric, path_out, filename, hue='participant_id'):
+    plt.figure()
+    
+    fig, ax = plt.subplots(figsize=(15,10))
+    sns.lineplot(ax=ax, data=df.loc[df['group']=='CR'], x="Slice (I->S)", y=metric,hue=hue, linewidth=2)  #errorbar='sd', ,palette=PALETTE[hue]
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.subplots_adjust(right=0.7)
+    ax.set_ylim(10,100)
     ymin, ymax = ax.get_ylim()
     # Get indices of slices corresponding vertebral levels
     vert, ind_vert, ind_vert_mid = get_vert_indices(df, vertlevel='VertLevel')
@@ -500,6 +539,10 @@ def main():
     logger.info('\n Comparing CSA at disc level...')
     compare_metrics_across_group(df_t2w_pam50_avg, perlevel=True)
 
+
+    # Plot individual subjects:
+    plot_ind_sub(df_t2_pam50, metric='MEAN(area)', path_out=output_folder, filename='t2w_PAM50_csa_persubject.png')
+
     # Load T2w perlevel
     #################################################################
     logger.info('\nAnalysing T2w CSA perlevel')
@@ -666,8 +709,8 @@ def main():
     # Get correlation matrix only for CR
     df_all['MEAN(area)'] = df_all[['MEAN(area)_3', 'MEAN(area)_4', 'MEAN(area)_5']].mean(axis=1)
     df_all_CR = df_all.loc[df_all['group']=='CR']
-    corr_matrix = df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']).corr(method='spearman')
-    corr_matrix_pvalue = r_pvalues(df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']))
+    corr_matrix = df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name']).corr(method='spearman')
+    corr_matrix_pvalue = r_pvalues(df_all_CR.drop(columns=['group', 'record_id','session', 'redcap_event_name']))
     corr_filename = os.path.join(output_folder, 'corr_table_CR')
     # Save a.csv file of the correlation matrix in the results folder
     corr_matrix.to_csv(corr_filename + '.csv')
@@ -676,7 +719,7 @@ def main():
 
     # Get correlation matrix only for HC
     df_all_HC = df_all.loc[df_all['group']=='HC']
-    corr_matrix = df_all_HC.drop(columns=['group', 'record_id','session', 'redcap_event_name', 'neck_disability_index_complete']).corr(method='spearman')
+    corr_matrix = df_all_HC.drop(columns=['group', 'record_id','session', 'redcap_event_name']).corr(method='spearman')
     # Save a.csv file of the correlation matrix in the results folder
     corr_filename = os.path.join(output_folder, 'corr_table_HC')
     corr_matrix.to_csv(corr_filename + '.csv')
