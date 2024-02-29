@@ -21,11 +21,11 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description="Peak detection for cardiac and respiratory data with GUI to add or remove peaks.")
     parser.add_argument('-i', required=True, type=str,
-                        help="filename for in FSL format .txt or .tsv file.")
+                        help="filename for in FSL format .txt.")
     parser.add_argument('-exclude-resp',  action='store_true',
                         help="To put 0 values in respiratory data")
     parser.add_argument('-min-peak-dist', type=int, default=68,
-                        help="To put 0 values in respiratory data")
+                        help="Minimum distance between peaks. Default = 68")
     parser.add_argument('-o', required=False, type=str,
                         help="Output filename. If not specified, physio_card.txt")
     return parser
@@ -45,6 +45,13 @@ def create_gui(idx_peaks, peak_values, data_filt, data_name):
     ax1.set_ylim(0, max(data_filt)*1.5)
     ax1.set_xlim(min(idx_peaks) - 5, max(idx_peaks) + 5)
 
+    # Plot peak diff
+    ax2 = plt.subplot(212)
+    ax2.set_xlabel('Index')
+    ax2.set_xlim(min(idx_peaks) - 5, max(idx_peaks) + 5)
+    ax2.set_title('Difference between peaks')
+    scatter2, = ax2.plot(data['x'][1::], np.diff(data['x']))
+
     # Function to add data points
     def onpick(event: PickEvent):
         x, y = event.xdata, event.ydata
@@ -59,6 +66,8 @@ def create_gui(idx_peaks, peak_values, data_filt, data_name):
             print('Now ', len(data['x']), 'of data points')
         # Update the scatter plot
         scatter.set_data(data['x'], data['y'])
+        scatter2.set_data(sorted(data['x'][1::]), np.diff(sorted(data['x'])))
+        ax2.set_ylim(min(np.diff(sorted(data['x']))) - 5, max(np.diff(sorted(data['x']))) + 5)
         plt.draw()
 
     # Function to remove data point
@@ -74,21 +83,14 @@ def create_gui(idx_peaks, peak_values, data_filt, data_name):
                     print('Now ', len(data['x']), 'of data points')
             # Update the scatter plot
             scatter.set_data(data['x'], data['y'])
+            scatter2.set_data(data['x'][1::], np.diff(data['x']))
+            ax2.set_ylim(min(np.diff(data['x'])) - 5, max(np.diff(data['x'])) + 5)
             plt.draw()
 
 
     # Connect the pick event handler
     fig.canvas.mpl_connect('pick_event', onpick_remove)
     fig.canvas.mpl_connect('button_press_event', onpick)
-
-    # Plot peak diff
-    ax2 = plt.subplot(212)
-    ax2.set_xlabel('Index')
-    ax2.set_xlim(min(idx_peaks) - 5, max(idx_peaks) + 5)
-
-    peak_diff = np.diff(idx_peaks)
-    ax2.set_title('Difference between peaks')
-    ax2.plot(idx_peaks[1::], peak_diff)
     plt.show()
     return data['x']
 
